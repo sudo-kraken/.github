@@ -1,0 +1,36 @@
+{
+  "name": ".github",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+  "remoteEnv": {
+    "PULUMI_BUCKET": "${localEnv:PULUMI_BUCKET}",
+    "PULUMI_S3_ENDPOINT": "${localEnv:PULUMI_S3_ENDPOINT}",
+    "AWS_ACCESS_KEY_ID": "${localEnv:AWS_ACCESS_KEY_ID}",
+    "AWS_SECRET_ACCESS_KEY": "${localEnv:AWS_SECRET_ACCESS_KEY}"
+  },
+  "features": {
+    "ghcr.io/va-h/devcontainers-features/uv:1": {},
+    "ghcr.io/devcontainers-extra/features/pulumi:1": {}
+  },
+  "forwardPorts": [],
+  "containerEnv": {
+    "AWS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.pulumi,target=/home/vscode/.pulumi,type=bind,consistency=cached",
+    "source=/etc/ssl/certs/ca-certificates.crt,target=/etc/ssl/certs/ca-certificates.crt,type=bind,consistency=cached,readonly"
+  ],
+  "userEnvProbe": "loginInteractiveShell",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "medo64.render-crlf",
+        "redhat.vscode-yaml",
+        "github.vscode-github-actions",
+        "donjayamanne.githistory",
+        "wholroyd.jinja",
+        "ms-python.python"
+      ]
+    }
+  }
+}

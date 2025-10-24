@@ -1,0 +1,18 @@
+Install [rustup](https://rustup.rs/).
+
+{%- if lint|default(false) %}
+### Run linter and formatter
+
+```
+cargo fmt
+cargo clippy
+```
+{% endif %}
+
+{%- if test|default(false) %}
+### Run test
+
+```
+cargo test
+```
+{%- endif %}

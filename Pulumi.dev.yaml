@@ -1,0 +1,82 @@
+encryptionsalt: v1:a8x1oPmTIa4=:v1:UOGGZAOU+ZyTVGVL:QqsrCT3rddIxp83JFzpmYDPEYWBsUQ==
+config:
+  default_branch_name: main
+
+  branch_name: automation-sync
+
+  author:
+    email: sudo-kraken@prxy.8shield.net
+    fullname: Joe Harrison
+
+  contact_email: sudo-kraken@prxy.8shield.net
+  security_email: sudo-kraken@prxy.8shield.net
+
+  funding:
+    github: sudo-kraken
+    buy_me_a_coffee: jharrison94
+
+  app_installation_ids:
+    renovatebot: "45460629"
+    dco: "38972756"
+
+  repositories:
+    - name: test-docker
+      title: test-docker
+      description: test docker
+      license: MIT
+      logo: logo.svg
+      topics:
+        - test
+        - pulumi
+      readme: true
+      language: python
+      versions: ["3.10", "3.11", "3.12", "3.13"]
+      gitignore: true
+      devcontainer: true
+
+      docker: true
+      docker_platforms:
+        - os: linux
+          arch: amd64
+        - os: linux
+          arch: arm64
+
+      package: false
+      package_name: test-docker
+
+      workflow:
+        lint: true
+        test: true
+        changelog: true
+        # documentation: true
+
+      application: true
+
+    - name: test-python
+      title: test-python
+      description: test python
+      license: MIT
+      logo: logo.svg
+      topics:
+        - test
+        - pulumi
+      readme: true
+      language: python
+      versions: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      gitignore: true
+      devcontainer: true
+
+      package: false
+#      package_name: test-python
+
+      workflow:
+        lint: true
+        test: true
+        changelog: true
+        # documentation: true
+
+      application: true
+
+  renovatebot:
+    configs: []
+    additionnal_configs: []

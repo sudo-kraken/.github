@@ -1,0 +1,57 @@
+- name: "🐛 bug"
+  description: "Something is not working"
+  color: "d73a4a"
+
+- name: "📖 documentation"
+  description: "Improvements or additions to documentation"
+  color: "0075ca"
+
+- name: "🚀 enhancement"
+  description: "New feature or request"
+  color: "a2eeef"
+
+- name: "🙏 help wanted"
+  description: "Extra attention is needed"
+  color: "008672"
+
+- name: "⏰ stale"
+  description: "Marks inactive issues/PRs for automatic closure after a warning"
+  color: "9bd435"
+
+- name: "⌛ pending author's response"
+  description: "Requested additional information from the reporter"
+  color: "fef2c0"
+
+- name: "🤷 can't reproduce"
+  description: "Issue cannot be reproduced"
+  color: "fef2c0"
+
+- name: "🐸 duplicate"
+  description: "Issue duplicate"
+  color: "fef2c0"
+
+- name: "⛔ wontfix"
+  description: "This will not be worked on"
+  color: "c27ba0"
+
+- name: "dependencies"
+  description: "Automated dependency updates"
+  color: "027fa0"
+
+{%- if language == "python" %}
+- name: "python"
+  description: "Python specific"
+  color: "027fa0"
+{%- endif %}
+
+{%- if docker %}
+- name: "container"
+  description: "Container builds and changes"
+  color: "2496ED"
+{%- endif %}
+
+{%- if renovatebot %}
+- name: "renovate"
+  description: "Changes created by Renovate"
+  color: "1A1F6C"
+{%- endif %}

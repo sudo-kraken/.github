@@ -1,0 +1,37 @@
+{%- raw %}
+build-binary:
+  name: Build binary
+  runs-on: ${{ matrix.runner }}
+  permissions:
+    contents: read
+  strategy:
+    fail-fast: false
+    matrix:
+      include:
+{%- endraw %}
+        {%- for platform in binary_platforms %}
+        - target: {{ platform["os"] }}
+          runner: {{ platform["runner"] }}
+        {%- endfor %}
+{%- raw %}
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [[ "${{ matrix.target }}" = *"-musl" ]]; then
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            musl-tools
+        fi
+
+    - name: Configure rust toolchain stable
+      run: rustup update stable && rustup default stable
+
+    - name: Build the binary
+      run: cargo build --release --locked --target=${{ matrix.job.target }}
+{%- endraw %}

@@ -1,0 +1,16 @@
+## Quick start
+Local development with uv
+
+```bash
+uv sync --all-extras
+uv run flask --app app:app run --host 0.0.0.0 --port ${PORT:-6969}
+```
+
+{% if docker %}
+Pull and run the image
+
+```bash
+docker pull ghcr.io/{{ repository_name }}:latest
+docker run --rm -p 6969:6969 -e PORT=6969 ghcr.io/{{ repository_name }}:latest
+```
+{% endif %}

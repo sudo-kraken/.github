@@ -1,0 +1,22 @@
+{# Renders Usage only when there is at least one subsection #}
+{% set has_usage = (package or docker or binary or helm) %}
+{% if has_usage %}
+  {% include "readme/sections/usage/title.md.j2" %}
+
+  {# Python package usage only if package=true #}
+  {% if language == "python" and package %}
+    {% include "readme/sections/usage/python.md.j2" %}
+  {% endif %}
+
+  {% if docker %}
+    {% include "readme/sections/usage/docker.md.j2" %}
+  {% endif %}
+
+  {% if binary and language == "go" %}
+    {% include "readme/sections/usage/go.md.j2" %}
+  {% endif %}
+
+  {% if helm %}
+    {% include "readme/sections/usage/helm.md.j2" %}
+  {% endif %}
+{% endif %}

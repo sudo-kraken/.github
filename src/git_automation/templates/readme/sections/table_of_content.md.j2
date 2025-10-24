@@ -1,0 +1,40 @@
+<!-- template:begin:table_of_content -->
+## Table of Contents
+- [Overview](#overview)
+- [Architecture at a glance](#architecture-at-a-glance)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Quick start](#quick-start)
+{# show Usage only if at least one usage subsection will render #}
+{% set has_usage = (package or docker or binary or helm) %}
+{% if has_usage -%}
+- [Usage](#usage)
+{%- if language == "python" and package %}
+  - [Python package](#python-package)
+{%- endif %}
+{%- if docker %}
+  - [Docker](#docker)
+{%- endif %}
+{%- if binary and language == "go" %}
+  - [Go](#go)
+{%- endif %}
+{%- if helm %}
+  - [Helm](#helm)
+{%- endif %}
+{% endif %}
+- [Configuration](#configuration)
+{# Always include Health & Endpoints in ToC for python or docker repos #}
+{% if language == "python" or docker -%}
+- [Health](#health)
+- [Endpoints](#endpoints)
+{%- endif %}
+- [Production notes](#production-notes)
+- [Development](#development)
+  - [Run linter and formatter](#run-linter-and-formatter)
+  - [Run test](#run-test)
+- [Troubleshooting](#troubleshooting)
+- [Licence](#licence)
+- [Security](#security)
+- [Contributing](#contributing)
+- [Support & Assistance](#support--assistance)
+<!-- template:end:table_of_content -->

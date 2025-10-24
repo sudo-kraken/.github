@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {%- if language == "python" %}
+    {
+      "name": "Python Debugger: Python File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}"
+    }
+    {%- elif language == "go" %}
+    {
+      "name": "Launch Package",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${fileDirname}"
+    }
+    {%- elif language == "rust" %}
+    {
+      "name": "Launch Package",
+      "type": "lldb-dap",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${fileDirname}"
+    }
+    {%- endif %}
+  ]
+}

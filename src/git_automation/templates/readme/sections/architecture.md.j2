@@ -1,0 +1,5 @@
+## Architecture at a glance
+
+  - {{ architecture_summary | default('Service-oriented design with a simple HTTP interface') }}
+  - App entrypoint: `{{ entrypoint | default('app:app') }}`
+  - Stateless HTTP endpoints and optional background workers

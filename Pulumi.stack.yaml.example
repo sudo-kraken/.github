@@ -1,0 +1,123 @@
+# Example Pulumi stack file showing available repository options
+# This is an example only. Use it as a template for your own stacks.
+
+config:
+  branch_name: automation-sync
+  author:
+    email: you@example.com
+    fullname: Your Name
+  contact_email: you@example.com
+  security_email: security@example.com
+  app_installation_ids:
+    renovatebot: "12345678"
+    dco: "12345678"
+
+  # repositories: list of repository specs to create/render
+  repositories:
+    - name: example-python-repo
+      title: Example Python Repo
+      description: A small example Python project created from templates
+      license: MIT
+  logo: logo.svg
+      topics:
+        - python
+        - example
+      readme: true
+      package: "example-python-repo"
+      label:
+        - default
+        - library
+      renovatebot:
+        configs:
+          - python
+        additionnal_configs: []
+      language: python
+      versions: ["3.9", "3.10", "3.11"]
+      gitignore: true
+      devcontainer: true
+      docker: false
+      application: true
+      workflow:
+        lint: true
+        test: true
+        changelog: true
+
+    - name: example-docker-repo
+      title: Example Docker Repo
+      description: Example repo that demonstrates Docker-based deployment
+      license: MIT
+  logo: logo.svg
+      topics:
+        - docker
+        - example
+      readme: true
+      package: "example-docker"
+      label:
+        - default
+      renovatebot:
+        configs:
+          - docker
+        additionnal_configs: []
+      language: go
+      versions: ["1.23", "1.24"]
+      gitignore: true
+      devcontainer: true
+      docker: true
+      application: true
+      workflow:
+        lint: true
+        test: true
+        changelog: true
+
+# Additional per-stack options you may find useful
+# e.g. repository default visibility, organization, templates, secrets, etc.
+
+# -----------------------------------------------------------------------------
+# Options reference (for the repository spec fields shown above)
+#
+# repositories:               # list of repository definitions
+#   - name: <string>          # repository short name (required)
+#     title: <string>         # title
+#     description: <string>   # short description
+#     license: <string>       # license folder name under templates/license (e.g. MIT, Apache-2.0)
+#     logo: <string>          # filename present in templates/logo (prefer .svg)
+#     topics:                 # list of topics/tags to add
+#       - topic1
+#       - topic2
+#     readme: <bool>          # whether to generate README.md (true/false)
+#     package: <string|bool>  # package name for published package (string) or false to skip
+#     label:                  # list of default label names to add
+#       - default
+#     renovatebot:            # renovatebot configuration (empty lists allowed)
+#       configs:              # default renovate configurations to include
+#         - python
+#         - docker
+#       additionnal_configs: []
+#     language: <string>      # one of: python, go, rust, (or any string used by templates)
+#     versions: [..]          # list of versions used by CI templates (e.g. python versions)
+#     gitignore: <bool>       # generate .gitignore (true/false)
+#     devcontainer: <bool>    # include devcontainer files (true/false)
+#     docker: <bool>          # enable docker workflows (true/false)
+#     helm: <bool>            # enable helm chart badge/links (true/false)
+#     helm_chart_name: <str>  # name of chart used in helm badge/link
+#     application: <bool>     # opt-in to application-specific sections in README
+#     workflow:               # per-repo workflow toggles
+#       lint: <bool>          # include lint workflow
+#       test: <bool>          # include test workflow
+#       changelog: <bool>     # include changelog/release workflow
+#     binary: <bool>          # include binary build workflow (true/false)
+#     binary_platforms:       # list of dicts describing binary platforms (for matrix)
+#       - os: linux
+#         arch: amd64
+#         runner: ubuntu-latest
+#         target: x86_64-unknown-linux-gnu
+#     docker_platforms:       # list of dicts describing docker build platforms
+#       - os: linux
+#         arch: amd64
+#         runner: ubuntu-latest
+#
+# Notes:
+# - Use boolean values (true/false) for flags. Templates use defaults when fields
+#   are omitted; we standardized templates to use `|default(...)` so missing
+#   keys won't break rendering.
+# -----------------------------------------------------------------------------

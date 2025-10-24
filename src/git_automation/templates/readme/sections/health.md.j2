@@ -1,0 +1,7 @@
+## Health
+
+{%- if health_endpoint is defined %}
+  - `GET {{ health_endpoint }}` returns `{ "ok": true }`
+{%- else %}
+  - `GET /health` returns `{ "ok": true }`
+{%- endif %}

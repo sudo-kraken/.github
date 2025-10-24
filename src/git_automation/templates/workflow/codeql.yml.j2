@@ -1,0 +1,59 @@
+---
+# THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CodeQL
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions: {}
+concurrency:
+  group: codeql-{{ "${{" }} github.ref {{ "}}" }}
+  cancel-in-progress: true
+jobs:
+  analyze:
+    name: Analyze ({{ "${{" }} matrix.language {{ "}}" }})
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      packages: read # required to fetch internal or private CodeQL packs
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          {%- if language == "python" %}
+          - language: python
+            build-mode: none
+          {%- elif language == "go" %}
+          - language: go
+            build-mode: autobuild
+          {%- elif language == "rust" %}
+          - language: rust
+            build-mode: autobuild
+          {% endif +%}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        with:
+          languages: {{ "${{" }} matrix.language {{ "}}" }}
+          build-mode: {{ "${{" }} matrix.build-mode {{ "}}" }}
+          queries: +security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@64d10c13136e1c5bce3e5fbde8d4906eeaafc885 # v3.30.6
+        with:
+          category: "/language:{{ "${{" }} matrix.language {{ "}}" }}"

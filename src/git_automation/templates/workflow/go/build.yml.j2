@@ -1,0 +1,56 @@
+{%- raw %}
+build-binary:
+  name: Build binary
+  runs-on: ${{ matrix.runner }}
+  permissions:
+    contents: read
+  strategy:
+    fail-fast: false
+    matrix:
+      include:
+{%- endraw %}
+        {%- for platform in binary_platforms %}
+        - os: {{ platform["os"] }}
+          arch: {{ platform["arch"] }}
+          runner: {{ platform["runner"] }}
+        {%- endfor %}
+{%- raw %}
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+
+    - name: Set up Go
+      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+      with:
+        go-version: stable
+        cache: false
+
+    - name: Get Git commit timestamps
+      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_OUTPUT
+
+    - name: Generate filenames
+      id: generate-filename
+      shell: bash
+      run: |
+        # Get repo name
+        REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+        # Get version
+        VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v//')
+
+        # Set output
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+
+    - name: Build binary
+      run: go build -trimpath -a -o "${BINARY_NAME}" -ldflags '-w -X main.version=${GITHUB_REF_NAME} -X main.buildTime=${TIMESTAMP} -extldflags "-static"'
+      shell: bash
+      env:
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
+        CGO_ENABLED: 0
+        BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
+        TIMESTAMP: ${{ env.TIMESTAMP }}
+{%- endraw %}

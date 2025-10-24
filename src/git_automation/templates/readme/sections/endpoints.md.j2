@@ -1,0 +1,10 @@
+## Endpoints
+
+{%- if endpoints|default(false) %}
+{%- for ep in endpoints %}
+- `{{ ep }}`
+{%- endfor %}
+{%- else %}
+- `GET /` home
+- `GET /health`
+{%- endif %}

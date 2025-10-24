@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "matchDatasources": ["{% if language == "python" -%}pypi{%- else %}{{ language }}{%- endif %}"],
+      "addLabels": ["renovate/{{ language }}"]
+    },
+{%- if "docker" in configs %}
+    {
+      "matchDatasources": ["dockerfile", "docker-compose"],
+      "addLabels": ["renovate/docker"]
+    },
+{%- endif %}
+    {
+      "matchDatasources": ["github-actions"],
+      "addLabels": ["renovate/github-actions"]
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "addLabels": ["renovate/github-tags"]
+    },
+    {
+      "matchDatasources": ["github-releases"],
+      "addLabels": ["renovate/github-releases"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "labels": ["type/major"]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "labels": ["type/minor"]
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "labels": ["type/patch"]
+    },
+    {
+      "matchUpdateTypes": ["digest"],
+      "labels": ["type/digest"]
+    },
+  ]
+}

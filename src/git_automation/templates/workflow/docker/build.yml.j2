@@ -1,0 +1,46 @@
+{%- raw %}
+build-docker:
+  name: Build (${{ matrix.arch }})
+
+  runs-on: ${{ matrix.runner }}
+
+  permissions:
+    contents: read
+
+  strategy:
+    fail-fast: false
+    matrix:
+      include:
+{%- endraw %}
+        {%- for platform in docker_platforms %}
+        - platform: {{ platform["os"] }}/{{ platform["arch"] }}
+          arch: {{ platform["arch"] }}
+          runner: {{ platform["runner"] }}
+        {%- endfor %}
+{%- raw %}
+
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Commit timestamp
+      id: ts
+      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+    - name: Warm cache (no push) [${{ matrix.platform }}]
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: ${{ matrix.platform }}
+        push: false
+        build-args: |
+          COMMIT_SHA=${{ github.sha }}
+          BUILD_DATE=${{ steps.ts.outputs.TIMESTAMP }}
+        cache-from: type=gha,scope=${{ matrix.platform }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+        provenance: false
+{%- endraw %}

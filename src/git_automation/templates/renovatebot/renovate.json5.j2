@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:enableMajor",
+    "replacements:k8s-registry-move",
+    ":automergePr",
+    ":automergePatch",
+    ":automergeDigest",
+    ":disableRateLimiting",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":timezone(Europe/London)",
+    "github>{{ repository_name | lower }}//.github/renovate/labels.json5",
+    "github>{{ repository_name | lower }}//.github/renovate/semanticCommits.json5",
+    "github>{{ repository_name | lower }}//.github/renovate/github-actions.json5",
+    {%- if "devcontainers" in configs %}
+    "github>{{ repository_name | lower }}//.github/renovate/devcontainers.json5",
+    {%- endif %}
+    {%- if "docker" in configs %}
+    "github>{{ repository_name | lower }}//.github/renovate/docker.json5",
+    {%- endif %}
+    {%- if "python" in configs %}
+    "github>{{ repository_name | lower }}//.github/renovate/python.json5",
+    {%- endif %}
+    {%- for additionnal_config in additionnal_configs %}
+    "github>{{ repository_name | lower }}//.github/renovate/{{ additionnal_config }}",
+    {%- endfor %}
+  ],
+  "dependencyDashboardTitle": "Renovate Dashboard 🤖",
+  "suppressNotifications": ["prEditedNotification", "prIgnoreNotification"],
+  "rebaseWhen": "conflicted",
+  {%- if schedule %}
+  "schedule": [
+    "{{ schedule }}"
+  ],
+  {%- endif %}
+  "labels": [
+    "dependencies",
+  ],
+  "minimumReleaseAge": "7 days",
+}

@@ -1,0 +1,8 @@
+## Prerequisites
+
+{%- if docker %}
+  - Docker or Kubernetes to run the container image
+{%- endif %}
+{%- if language == 'python' %}
+  - Python {{ python_version | default('3.11') }} and uv for local development
+{%- endif %}

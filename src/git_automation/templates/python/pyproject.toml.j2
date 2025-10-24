@@ -1,0 +1,39 @@
+[project]
+name = "{{ name }}"
+version = "0.1.0"
+description = "{{ description }}"
+readme = "README.md"
+authors = [{ name = "Joe Harrison", email = "sudo-kraken@prxy.8shield.net" }]
+requires-python = ">=3.11,<4.0.0"
+dependencies = []
+keywords = []
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "License :: MIT",
+  "Topic :: Utilities",
+]
+
+[project.optional-dependencies]
+dev = ["ruff~=0.14.0"]
+
+[project.urls]
+Homepage = "https://github.com/{{ owner }}/{{ repo }}"
+Issues = "https://github.com/{{ owner }}/{{ repo }}/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pytest.ini_options]
+addopts = "-q"

@@ -1,0 +1,39 @@
+encryptionsalt: v1:HHN2brnF1N8lvZYj4/rSpw==:v1:gIQX99Wqy11paRFKUbNZbg==:xr7M6cjaEyd6oLiSp3RHa5LOCk8Nltm1
+config:
+  branch_name: automation-sync
+  author:
+    email: sudo-kraken@prxy.8shield.net
+    fullname: Joe Harrison
+  contact_email: sudo-kraken@prxy.8shield.net
+  funding:
+    github: sudo-kraken
+    buy_me_a_coffee: jharrison94
+  security_email: sudo-kraken@prxy.8shield.net
+  app_installation_ids:
+    renovatebot: "45460629"
+    dco: "38972756"
+  repositories:
+    - name: octodns-infomaniak
+      title: octodns-infomaniak
+      description: Infomaniak provider for octoDNS
+      license: MIT
+  logo: logo.svg
+      topics:
+        - dns
+        - octodns
+        - infomaniak
+      readme: true
+      package: "octodns-infomaniak"
+      label:
+        - default
+      renovatebot:
+        configs: []
+        additionnal_configs: []
+      language: python
+      versions: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      gitignore: true
+      devcontainer: true
+      workflow:
+        lint: true
+        test: true
+        changelog: true

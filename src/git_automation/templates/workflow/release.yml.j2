@@ -1,0 +1,78 @@
+{%- set tag_prefix %}
+{%- if language == "go" %}v{% endif -%}
+{% endset -%}
+---
+# THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+{%- set included_content -%}
+{%- if package %}
+{%- include "workflow/{}/package.yml.j2".format(language) %}
+{%- endif %}
+{%- if documentation %}
+{%- include "workflow/{}/documentation.yml.j2".format(language) %}
+{%- endif %}
+{%- if docker %}
+{%- include "workflow/docker/package.yml.j2" -%}
+{%- endif %}
+{%- endset -%}
+{%- set needs %}
+{%- if package %}
+{%- if language == "python" %}, publish-package{% endif -%}
+{% endif -%}
+{%- if documentation %}, documentation{% endif -%}
+{%- if docker %}, verify-docker{% endif -%}
+{%- endset %}
+name: Release
+on:
+  push:
+    tags:
+      - "{{ tag_prefix }}*"
+permissions: {}
+concurrency:
+  group: release-{{ "${{" }} github.ref {{ "}}" }}
+  cancel-in-progress: true
+jobs:
+{%- if changelog %}
+{%- set included_template %}
+{%- include "workflow/changelog/main.yml.j2" %}
+{%- endset %}
+{{- included_template | indent(2) }}
+{% endif %}
+  create-draft-release:
+    name: Create release as draft
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    {%- if changelog %}
+    needs: [changelog]
+    {% endif -%}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create release as draft
+        run: gh release create {{ "${" }}GITHUB_REF_NAME{{ "}" }}  -t "Release {{ "${" }}GITHUB_REF_NAME{{ "}" }}" {%- if changelog %} -n "{{ "${" }}RELEASE_BODY{{ "}" }}"{% endif %} --draft
+        env:
+          GITHUB_TOKEN: {{ "${{" }} secrets.GITHUB_TOKEN {{ "}}" }}
+          RELEASE_BODY: {{ "${{" }} needs.changelog.outputs.release_body {{ "}}" }}
+{{ included_content | indent(2) }}
+  publish-release:
+    name: Publish release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    needs: [create-draft-release{{ needs }}]
+{%- raw %}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Create release
+        run: gh release edit ${GITHUB_REF_NAME} --draft=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+{%- endraw %}

@@ -1,0 +1,220 @@
+{%- set tag_prefix %}
+{%- if language == "go" %}v{% endif -%}
+{%- endset %}
+{%- raw %}
+build-docker:
+  name: Build (${{ matrix.arch }})
+
+  runs-on: ${{ matrix.runner }}
+
+  permissions:
+    contents: read
+
+  strategy:
+    fail-fast: false
+    matrix:
+      include:
+{%- endraw %}
+        {%- for platform in docker_platforms %}
+        - platform: {{ platform["os"] }}/{{ platform["arch"] }}
+          arch: {{ platform["arch"] }}
+          runner: {{ platform["runner"] }}
+        {%- endfor %}
+{%- raw %}
+
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Commit timestamp
+      id: ts
+      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+    - name: Warm cache (no push) [${{ matrix.platform }}]
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: ${{ matrix.platform }}
+        push: false
+        build-args: |
+          COMMIT_SHA=${{ github.sha }}
+          BUILD_DATE=${{ steps.ts.outputs.TIMESTAMP }}
+        cache-from: type=gha,scope=${{ matrix.platform }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+        provenance: false
+
+publish-docker:
+  name: Publish multi-arch image manifests
+
+  runs-on: ubuntu-24.04
+
+  permissions:
+    contents: read
+    packages: write
+
+  outputs:
+    ghcr_digest: ${{ steps.digests.outputs.GHCR_DIGEST }}
+
+  needs: [build-docker]
+
+  env:
+    VERSION: ${{ github.ref_name }}
+
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Commit timestamp
+      id: ts
+      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+      with:
+        images: |
+          ghcr.io/${{ github.repository }}
+        tags: |
+          type=raw,value=${{ env.VERSION }}
+        labels: |
+          org.opencontainers.image.created=${{ steps.ts.outputs.TIMESTAMP }}
+
+    - name: Build & Push (multi-arch)
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      with:
+        context: .
+        file: ./Dockerfile
+{%- endraw %}
+        platforms: {% for platform in docker_platforms %}{{ platform["os"] }}/{{ platform["arch"] }}{% if not loop.last %},{% endif %}{% endfor %}
+{%- raw %}
+        push: true
+        build-args: |
+          COMMIT_SHA=${{ github.sha }}
+          BUILD_DATE=${{ steps.ts.outputs.TIMESTAMP }}
+        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ steps.meta.outputs.tags }}
+        cache-from: |
+{%- endraw %}
+          {%- for platform in docker_platforms %}
+          type=gha,scope={{ platform["os"] }}/{{ platform["arch"] }}
+          {%- endfor %}
+{%- raw %}
+        cache-to: type=gha,mode=max
+        provenance: false
+
+    - name: Resolve manifest digest
+      id: digests
+      run: |
+        GHCR_DIGEST=$(docker buildx imagetools inspect "ghcr.io/${{ github.repository }}:${{ env.VERSION }}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+        echo "GHCR_DIGEST=$GHCR_DIGEST" >> $GITHUB_OUTPUT
+
+    - name: Tag :latest (non-pre-release only)
+      if: ${{ !contains(env.VERSION, '-') }}
+      run: |
+        docker buildx imagetools create \
+          -t ghcr.io/${{ github.repository }}:latest \
+          ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+
+sign-docker:
+  name: Sign image and create SBOM attestation
+
+  runs-on: ubuntu-24.04
+
+  permissions:
+    contents: read
+    packages: write
+    id-token: write
+
+  needs: [publish-docker]
+
+  env:
+    VERSION: ${{ github.ref_name }}
+    COSIGN_YES: 'true'
+
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+    - name: Install Trivy
+      uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sign image
+      run: |
+        cosign sign --recursive "ghcr.io/${{ github.repository }}@${{ needs.publish-docker.outputs.ghcr_digest }}"
+
+    - name: Generate SBOM with Trivy
+      run: |
+        trivy image --format cyclonedx --output ghcr-image-${{ env.VERSION }}.sbom \
+          "ghcr.io/${{ github.repository }}@${{ needs.publish-docker.outputs.ghcr_digest }}"
+
+    - name: Attest SBOM
+      run: |
+        cosign attest \
+          --type cyclonedx \
+          --predicate ghcr-image-${{ env.VERSION }}.sbom \
+          "ghcr.io/${{ github.repository }}@${{ needs.publish-docker.outputs.ghcr_digest }}"
+
+    - name: Upload SBOMs
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: sboms-${{ env.VERSION }}
+        path: '*.sbom'
+        if-no-files-found: error
+        retention-days: 1
+
+verify-docker:
+  name: Verify signatures and attestation
+
+  runs-on: ubuntu-24.04
+
+  permissions:
+    contents: read
+
+  needs: [publish-docker, sign-docker]
+
+  env:
+    VERSION: ${{ github.ref_name }}
+
+  steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+    - name: Verify signature
+      run: |
+        cosign verify "ghcr.io/${{ github.repository }}@${{ needs.publish-docker.outputs.ghcr_digest }}" \
+          --certificate-identity "https://github.com/${{ github.workflow_ref }}" \
+          --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+
+    - name: Verify SBOM attestation
+      run: |
+        cosign verify-attestation "ghcr.io/${{ github.repository }}@${{ needs.publish-docker.outputs.ghcr_digest }}" \
+          --type cyclonedx \
+          --certificate-identity "https://github.com/${{ github.workflow_ref }}" \
+          --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+{%- endraw %}

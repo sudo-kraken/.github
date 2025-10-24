@@ -1,0 +1,198 @@
+{%- raw %}
+build-package:
+  name: Build package
+  runs-on: ${{ matrix.runner }}
+  permissions:
+    contents: read
+  outputs:
+    version: ${{ steps.generate-filename.outputs.VERSION }}
+  strategy:
+    fail-fast: false
+    matrix:
+      include:
+{%- endraw %}
+        {%- for platform in binary_platforms %}
+        - target: {{ platform["os"] }}
+          runner: {{ platform["runner"] }}
+        {%- endfor %}
+{%- raw %}
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        persist-credentials: false
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [[ "${{ matrix.target }}" = *"-musl" ]]; then
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            musl-tools
+        fi
+
+    - name: Configure rust toolchain stable
+      run: rustup update stable && rustup default stable
+
+    - name: Generate filenames
+      id: generate-filename
+      shell: bash
+      run: |
+        # Get repo name
+        REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+        # Get version
+        VERSION=$(echo "${GITHUB_REF_NAME}" | sed 's/^v/')
+
+        # Set output
+        echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+        echo "BINARY_NAME=${REPO_NAME}" >> $GITHUB_OUTPUT
+        echo "SBOM_NAME=${REPO_NAME}-${VERSION}-${{ matrix.target }}.sbom" >> $GITHUB_OUTPUT
+        echo "TAR_GZ_NAME=${REPO_NAME}-${VERSION}-${{ matrix.target }}.tar.gz" >> $GITHUB_OUTPUT
+
+    - name: Build the binary
+      run: cargo build --release --locked --target=${{ matrix.job.target }}
+
+    - name: Create tar.gz of binary with license and readme
+      shell: bash
+      run: tar -czf ${TAR_GZ_NAME} target/${{ matrix.job.target }}/release/${BINARY_NAME} LICENSE.txt LICENSE_en.txt README.md
+      env:
+        BINARY_NAME: ${{ steps.generate-filename.outputs.BINARY_NAME }}
+
+    - name: Generate SBOM
+      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # 0.33.1
+      with:
+        scan-type: fs
+        scan-ref: .
+        format: cyclonedx
+        output: ${{ steps.generate-filename.outputs.SBOM_NAME }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: artifacts
+        name: artifacts-${{ matrix.target }}
+        path: |
+          ${{ steps.generate-filename.outputs.TAR_GZ_NAME }}
+          ${{ steps.generate-filename.outputs.SBOM_NAME }}
+        if-no-files-found: error
+        retention-days: 1
+
+sign-publish-artifact:
+  name: Sign and publish artifact
+  runs-on: ubuntu-24.04
+  permissions:
+    contents: write
+    id-token: write # needed for signing the artifact with GitHub OIDC Token
+  needs: [create-draft-release, build-artifact]
+  steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+    - name: Downloads artifacts
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+      with:
+        pattern: artifacts-*
+        merge-multiple: true
+        path: ${{ runner.temp }}/artifacts
+
+    - name: Create checksum file
+      working-directory: ${{ runner.temp }}/artifacts
+      run: |
+        shopt -s nullglob
+        for archive in *.tar.gz; do
+          echo "Generate checksum for ${archive}"
+          CHECKSUM=$(sha256sum ${archive})
+          echo $CHECKSUM >> checksums.txt
+        done
+
+    - name: Sign the artifacts with GitHub OIDC Token
+      working-directory: ${{ runner.temp }}/artifacts
+      env:
+        COSIGN_YES: true
+      run: |
+        shopt -s nullglob
+        for archive in *.tar.gz; do
+          archive_without_ext="${archive%.tar.gz}"
+
+          echo "Sign archive for ${archive}"
+          cosign sign-blob ${archive} \
+            --output-certificate ${archive_without_ext}.pem \
+            --output-signature ${archive_without_ext}.sig
+        done
+
+    - name: Attest SBOM
+      working-directory: ${{ runner.temp }}/artifacts
+      run: |
+        shopt -s nullglob
+        for sbom in *.sbom; do
+          sbom_without_ext="${sbom%.sbom}"
+
+          echo "Attest sbom file ${sbom}"
+          cosign attest-blob -y \
+            --type cyclonedx \
+            --new-bundle-format \
+            --predicate ${sbom} \
+            --bundle ${sbom_without_ext}.sbom.bundle \
+            ${sbom_without_ext}.tar.gz
+
+          rm ${sbom}
+        done
+
+    - name: Upload artifact to release
+      working-directory: ${{ runner.temp }}/artifacts
+      run: gh release upload ${VERSION} * -R ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        VERSION: ${{ needs.build-artifact.outputs.version }}
+
+verify-artifact:
+  name: Verify artifact
+  runs-on: ubuntu-24.04
+  permissions:
+    contents: read
+  needs: [publish-release]
+  steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+
+    - name: Install Trivy
+      uses: aquasecurity/setup-trivy@e6c2c5e321ed9123bda567646e2f96565e34abe1 # v0.2.4
+
+    - name: Download assets from release
+      run: gh release download ${GITHUB_REF_NAME} -R ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Verify checksum
+      run: sha256sum -c checksums.txt
+
+    - name: Verify signature
+      run: |
+        for binary in ./*.tar.gz; do
+          binary_basename="${binary%.tar.gz}"
+
+          echo "Verify binary for ${binary}"
+          cosign verify-blob \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            --cert "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${binary_basename}.pem" \
+            --signature "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${binary_basename}.sig" \
+            ./${binary}
+        done
+
+    - name: Verify sbom attestation
+      run: |
+        for binary in *.tar.gz; do
+          binary_basename="${binary%.tar.gz}"
+
+          echo "Verify sbom for ${sbom}"
+          cosign verify-blob-attestation \
+            --type=cyclonedx \
+            --new-bundle-format \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/release.yml@refs/tags/${GITHUB_REF_NAME}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            --bundle ./${binary_basename}.sbom.bundle \
+            ./${binary}
+        done
+{%- endraw %}

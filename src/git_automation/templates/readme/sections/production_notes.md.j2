@@ -1,0 +1,4 @@
+## Production notes
+
+  - Prefer using a WSGI server (Gunicorn/uvicorn) with multiple workers for production.
+  - Expose the `/health` endpoint to your load balancer or orchestrator for liveness checks.

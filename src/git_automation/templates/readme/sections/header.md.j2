@@ -1,0 +1,34 @@
+<!-- template:begin:header -->
+<div align="center">
+{% if logo %}
+<img src="docs/assets/logo.svg" align="center" width="144px" height="144px" alt="logo"/>
+{% endif %}
+
+### {{ repository_title }}
+
+_{{ repository_description }}_
+</div>
+
+<div align="center">
+
+{# --- Python badges --- #}
+{% if language == "python" and package and package_name %}
+[![Pypi](https://img.shields.io/pypi/v/{{ package_name }}?label=&logo=pypi&style=for-the-badge&labelColor=white&color=3776AB)](https://pypi.python.org/pypi/{{ package_name }})
+[![Python](https://img.shields.io/pypi/pyversions/{{ package_name }}?label=&logo=python&style=for-the-badge&labelColor=white&color=3776AB)](https://pypi.python.org/pypi/{{ package_name }})
+{% elif language == "python" %}
+[![Python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2F{{ owner }}%2F{{ name }}%2F{{ default_branch_name }}%2Fpyproject.toml&logo=pythonlogoColor=yellow&color=3776AB&style=for-the-badge)](https://github.com/{{ repository_name }}/blob/{{ default_branch_name }}/pyproject.toml)
+{% endif %}
+
+{# --- Docker badge --- #}
+{% if docker %}
+[![Docker](https://img.shields.io/github/v/tag/{{ repository_name }}?label=&logo=docker&style=for-the-badge&labelColor=white&color=2496ED)](https://github.com/{{ repository_name }}/pkgs/container/{{ repository_basename }})
+{% endif %}
+
+</div>
+
+<div align="center">
+
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/{{ repository_name }}?label=openssf scorecard&style=for-the-badge)](https://scorecard.dev/viewer/?uri=github.com/{{ repository_name }})
+
+</div>
+<!-- template:end:header -->

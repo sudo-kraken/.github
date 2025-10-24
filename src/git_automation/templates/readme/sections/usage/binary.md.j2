@@ -1,0 +1,42 @@
+<!-- template:begin:usage/binary -->
+{%- set tag_prefix %}{%- if language == "go" %}v{% endif -%}{%- endset %}
+{%- set basename %}{{ repository_name.split("/")[1] }}-${version}-${platform}{%- endset %}
+{%- set platform %}{%- if language == "go" %}linux-amd64{%- else %}x86_64-unknown-linux-gnu{% endif -%}{%- endset %}
+####  Binary
+```bash
+version="1.0.0"
+platform="{{ platform }}"
+
+# Download binary
+wget "https://github.com/{{ repository_name | lower }}/releases/download/{{ tag_prefix }}${version}/{{ basename }}.tar.gz"
+
+# Verify checksum (recommended but not required)
+wget "https://github.com/{{ repository_name | lower }}/releases/download/{{ tag_prefix }}${version}/checksums.txt"
+sha256sum --ignore-missing -c checksums.txt
+
+# Verify binary signature (recommended but not required)
+cosign verify-blob \
+  --certificate-identity "https://github.com/{{ repository_name }}/.github/workflows/release.yml@refs/tags/{{ tag_prefix }}${version}" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --cert "https://github.com/{{ repository_name | lower }}/releases/download/{{ tag_prefix }}${version}/{{ basename }}.pem" \
+  --signature "https://github.com/{{ repository_name | lower }}/releases/download/{{ tag_prefix }}${version}/{{ basename }}.sig" \
+  ./{{ basename }}.tar.gz
+
+# Extract binary
+tar -xvzf {{ basename }}.tar.gz
+
+# Verify SBOM attestation (recommended but not required)
+wget "https://github.com/{{ repository_name | lower }}/releases/download/{{ tag_prefix }}${version}/{{ basename }}.sbom.bundle"
+cosign verify-blob-attestation \
+  --type=cyclonedx \
+  --new-bundle-format \
+  --certificate-identity "https://github.com/{{ repository_name }}/.github/workflows/release.yml@refs/tags/{{ tag_prefix }}${version}" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  --bundle {{ basename }}.sbom.bundle
+  ./{{ basename }}.tar.gz
+
+# Scan SBOM attestation, SBOM attestation was saved from the previous step  (recommended but not required)
+jq -r '.dsseEnvelope.payload' {{ basename }}.sbom.bundle | base64 -d | jq -r '.predicate' > ./{{ basename }}-extracted.sbom.bundle
+trivy sbom ./{{ basename }}-extracted.sbom.bundle
+```
+<!-- template:end:usage/binary -->

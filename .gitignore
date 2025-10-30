@@ -52,3 +52,7 @@ uv.lock
 # Environment
 .env
 .env.local
+
+# Pulumi Stack Files (contain sensitive configuration)
+Pulumi.*.yaml
+!Pulumi.stack.yaml.example

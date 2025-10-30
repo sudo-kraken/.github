@@ -18,19 +18,17 @@ config:
       title: Example Python Repo
       description: A small example Python project created from templates
       license: MIT
-  logo: logo.svg
+      logo: logo.svg
       topics:
         - python
         - example
       readme: true
       package: "example-python-repo"
-      label:
-        - default
-        - library
+      label: true
       renovatebot:
         configs:
           - python
-        additionnal_configs: []
+        additional_configs: []
       language: python
       versions: ["3.9", "3.10", "3.11"]
       gitignore: true
@@ -46,18 +44,17 @@ config:
       title: Example Docker Repo
       description: Example repo that demonstrates Docker-based deployment
       license: MIT
-  logo: logo.svg
+      logo: logo.svg
       topics:
         - docker
         - example
       readme: true
       package: "example-docker"
-      label:
-        - default
+      label: true
       renovatebot:
         configs:
           - docker
-        additionnal_configs: []
+        additional_configs: []
       language: go
       versions: ["1.23", "1.24"]
       gitignore: true
@@ -86,13 +83,12 @@ config:
 #       - topic2
 #     readme: <bool>          # whether to generate README.md (true/false)
 #     package: <string|bool>  # package name for published package (string) or false to skip
-#     label:                  # list of default label names to add
-#       - default
+#     label: <bool>           # generate repository labels (true/false)
 #     renovatebot:            # renovatebot configuration (empty lists allowed)
 #       configs:              # default renovate configurations to include
 #         - python
 #         - docker
-#       additionnal_configs: []
+#       additional_configs: []
 #     language: <string>      # one of: python, go, rust, (or any string used by templates)
 #     versions: [..]          # list of versions used by CI templates (e.g. python versions)
 #     gitignore: <bool>       # generate .gitignore (true/false)

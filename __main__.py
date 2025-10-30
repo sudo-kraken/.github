@@ -1,30 +1,34 @@
+"""
+Pulumi program for managing GitHub organization repositories and automation.
+
+This module orchestrates repository creation, configuration synchronization,
+and workflow generation using declarative Pulumi stack configurations.
+"""
 import pulumi
 
 from git_automation.GitRepositoryComponent import GitRepositoryComponent
 
 _BUILD_PLATFORMS = {
     "docker": [
-        {"os": "linux", "arch": "amd64", "runner": "ubuntu-24.04"},
+        {"os": "linux", "arch": "amd64", "runner": "ubuntu-latest"},
         {"os": "linux", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
     ],
     "go": [
-        {"os": "linux", "arch": "amd64", "runner": "ubuntu-24.04"},
+        {"os": "linux", "arch": "amd64", "runner": "ubuntu-latest"},
         {"os": "linux", "arch": "arm64", "runner": "ubuntu-24.04-arm"},
-        {"os": "darwin", "arch": "amd64", "runner": "macos-15-intel"},
-        {"os": "darwin", "arch": "arm64", "runner": "macos-15"},
-        {"os": "windows", "arch": "amd64", "runner": "windows-2025"},
-        {"os": "windows", "arch": "arm64", "runner": "windows-11-arm"},
+        {"os": "darwin", "arch": "amd64", "runner": "macos-13"},
+        {"os": "darwin", "arch": "arm64", "runner": "macos-latest"},
+        {"os": "windows", "arch": "amd64", "runner": "windows-latest"},
     ],
     "rust": [
-        {"target": "x86_64-unknown-linux-gnu", "runner": "ubuntu-24.04"},
-        {"target": "x86_64-unknown-linux-musl", "runner": "ubuntu-24.04"},
+        {"target": "x86_64-unknown-linux-gnu", "runner": "ubuntu-latest"},
+        {"target": "x86_64-unknown-linux-musl", "runner": "ubuntu-latest"},
         {"target": "aarch64-unknown-linux-gnu", "runner": "ubuntu-24.04-arm"},
         {"target": "aarch64-unknown-linux-musl", "runner": "ubuntu-24.04-arm"},
-        {"target": "x86_64-apple-darwin", "runner": "macos-15-intel"},
-        {"target": "aarch64-apple-darwin", "runner": "macos-15"},
-        {"target": "x86_64-pc-windows-msvc", "runner": "windows-2025"},
-        {"target": "x86_64-pc-windows-gnu", "runner": "windows-2025"},
-        {"target": "aarch64-pc-windows-msvc", "runner": "windows-11-arm"},
+        {"target": "x86_64-apple-darwin", "runner": "macos-13"},
+        {"target": "aarch64-apple-darwin", "runner": "macos-latest"},
+        {"target": "x86_64-pc-windows-msvc", "runner": "windows-latest"},
+        {"target": "x86_64-pc-windows-gnu", "runner": "windows-latest"},
     ],
 }
 
@@ -35,7 +39,7 @@ owner = pulumi.Config("github").require("owner")
 global_renovate = config.get_object("renovatebot") or {}
 
 if author is None:
-    raise ValueError("Author can't be None")
+    raise ValueError("Author cannot be None")
 
 for repository_config in config.get_object("repositories", []):
     workflow = "workflow" in repository_config
@@ -80,7 +84,7 @@ for repository_config in config.get_object("repositories", []):
 
     # Base files
     if "license" in repository_config and repository_config["license"]:
-        repository.sync_licence(repository_config["license"])
+        repository.sync_license(repository_config["license"])
 
     funding = config.get_object("funding")
     if funding:
@@ -127,7 +131,7 @@ for repository_config in config.get_object("repositories", []):
             or repo_renovate.get("schedule"),
             language,
             configs,
-            repo_renovate.get("additionnal_configs", []),
+            repo_renovate.get("additional_configs", []),
         )
 
     if "logo" in repository_config and bool(repository_config["logo"]):

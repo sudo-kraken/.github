@@ -1,6 +1,6 @@
 [project]
 name = "git_automation"
-version = "0.0.0"
+version = "1.0.0"
 description = "Github meta repository, contains automation/workflows/standard configs used across my repositories."
 readme = "README.md"
 authors = [{ name = "Joe Harrison", email = "sudo-kraken@prxy.8shield.net" }]
@@ -19,9 +19,13 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
-  "License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)",
+  "License :: OSI Approved :: MIT License",
   "Topic :: Utilities",
 ]
+
+[project.urls]
+"Source Code" = "https://github.com/sudo-kraken/.github"
+"Bug Tracker" = "https://github.com/sudo-kraken/.github/issues"
 
 [project.optional-dependencies]
 dev = ["ruff~=0.14.0"]

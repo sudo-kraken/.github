@@ -1,5 +1,5 @@
 <div align="center">
-<img src="src\git_automation\logo\logo.svg" align="center" width="144px" height="144px" alt="logo"/>
+<img src="src/git_automation/logo/logo.svg" align="center" width="144px" height="144px" alt="logo"/>
 
 ### GitHub Organisation Automation with Pulumi
 
@@ -36,7 +36,7 @@ _Automate organisation and repository configuration using Pulumi. Uses uv for Py
 
 ## Overview
 
-This repository contains Pulumi constructs and helper code that codify GitHub organisation and repository settings. Stacks are managed with the Pulumi CLI and are designed to be safe by default to avoid destructive operations on repositories.
+This repository contains Pulumi constructs and helper code that codify GitHub organisation and repository settings. Stacks are managed with the Pulumi CLI and repositories will be permanently deleted when removed from configuration.
 
 This repository also contains reusable README templates and generator code under `src/git_automation/templates`. Use the included templates to render repository README files. See `Pulumi.stack.yaml.example` for an example stack configuration showing repository options.
 
@@ -52,7 +52,7 @@ This repository also contains reusable README templates and generator code under
 - Declarative management of GitHub repositories and settings.
 - Environment-aware configuration using `PULUMI_STACK`.
 - Import support for bringing existing repositories under management.
-- Guard rails to prevent accidental repository deletion.
+- Template-based repository file synchronization and workflow generation.
 
 ## Prerequisites
 
@@ -70,8 +70,8 @@ Create a fine-grained GitHub token with the following repository level permissio
 
 ## Safety
 
-> [!IMPORTANT]
-> To prevent accidental deletion of GitHub repositories, resources use `prevent_destroy` lifecycle configuration. Deletions require a manual, deliberate step.
+> [!WARNING]
+> Repositories will be **permanently deleted** when removed from your Pulumi configuration and running `pulumi up`. Always ensure you have backups before removing repositories from your stack configuration. To enable safer archiving instead of deletion, modify `archive_on_destroy=True` in `GitRepositoryComponent.py`.
 
 ## Setup
 
@@ -128,8 +128,10 @@ pulumi import <resource-type> <name> <id>
 ### Delete a resource
 
 ```sh
-# Remove from configuration first, then:
-pulumi destroy
+# Remove repository from configuration in your stack file, then:
+pulumi up  # This will permanently delete the repository
+
+# WARNING: This is destructive and cannot be undone easily
 ```
 
 ### Manual Pulumi operations
@@ -187,9 +189,9 @@ In **Settings → Installations**:
 
 - Add the required GitHub Apps to your repositories.
 
-## Licence
+## License
 
-This project is licensed under the MIT Licence. See the [LICENCE](LICENCE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Security
 
@@ -197,7 +199,7 @@ If you discover a security issue, please review and follow the guidance in [SECU
 
 ## Contributing
 
-Feel free to open issues or submit pull requests if you have suggestions or improvements.
+Open issues or submit pull requests for suggestions and improvements.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 

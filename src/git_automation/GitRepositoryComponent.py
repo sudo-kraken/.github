@@ -1,3 +1,10 @@
+"""
+GitHub repository component for Pulumi infrastructure management.
+
+Provides a component resource that manages GitHub repositories with
+automated file synchronization, workflow generation, and configuration
+management through Jinja2 templates.
+"""
 import os
 import time
 from importlib import resources
@@ -11,6 +18,11 @@ from pulumi.output import Output
 import pulumi_github as github
 
 PACKAGE_NAME = __name__.split(".")[0]
+
+# API Configuration
+GITHUB_API_TIMEOUT = 10
+README_FETCH_RETRIES = 3
+RETRY_BACKOFF_BASE = 1
 
 env = Environment(
     loader=PackageLoader(PACKAGE_NAME, "templates"),
@@ -91,7 +103,7 @@ class GitRepositoryComponent(pulumi.ComponentResource):
             topics=topics,
             visibility="public",
             vulnerability_alerts=True,
-            archive_on_destroy=True,
+            archive_on_destroy=False,
             opts=pulumi.ResourceOptions(parent=self),
         )
 
@@ -191,14 +203,24 @@ class GitRepositoryComponent(pulumi.ComponentResource):
             token = os.environ.get("GITHUB_TOKEN")
             if token:
                 headers["Authorization"] = f"Bearer {token}"
-            r = requests.get(
-                f"https://api.github.com/users/{owner}", headers=headers, timeout=10
+            response = requests.get(
+                f"https://api.github.com/users/{owner}", headers=headers, timeout=GITHUB_API_TIMEOUT
             )
-            if r.status_code == 200:
-                data = r.json()
+            if response.status_code == 200:
+                data = response.json()
                 return data.get("type") == "Organization"
-        except Exception:
-            pass
+            elif response.status_code == 404:
+                pulumi.log.warn(f"Owner '{owner}' not found on GitHub")
+            elif response.status_code == 401:
+                pulumi.log.warn("GitHub authentication failed - check GITHUB_TOKEN")
+            else:
+                pulumi.log.warn(f"GitHub API returned status {response.status_code} for owner '{owner}'")
+        except requests.exceptions.Timeout:
+            pulumi.log.warn(f"Timeout while checking if '{owner}' is an organization")
+        except requests.exceptions.RequestException as e:
+            pulumi.log.warn(f"Network error while checking owner type: {e}")
+        except (KeyError, ValueError) as e:
+            pulumi.log.warn(f"Error parsing GitHub API response: {e}")
         return False
 
     def get_working_branch(self) -> github.Branch:
@@ -228,22 +250,31 @@ class GitRepositoryComponent(pulumi.ComponentResource):
         token = os.environ.get("GITHUB_TOKEN")
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        for attempt in range(3):
+        for attempt in range(README_FETCH_RETRIES):
             try:
-                r = requests.get(url, headers=headers, timeout=10)
-                if r.status_code == 200 and r.text is not None:
-                    return r.text
-                if r.status_code in {403, 404}:
-                    time.sleep(1 + attempt)
-            except Exception:
-                time.sleep(1 + attempt)
+                response = requests.get(url, headers=headers, timeout=GITHUB_API_TIMEOUT)
+                if response.status_code == 200 and response.text is not None:
+                    return response.text
+                if response.status_code in {403, 404}:
+                    if attempt == README_FETCH_RETRIES - 1:
+                        pulumi.log.info(f"README.md not found for {self.owner}/{self.name} (will be created)")
+                    elif attempt < README_FETCH_RETRIES - 1:
+                        time.sleep(RETRY_BACKOFF_BASE + attempt)
+            except requests.exceptions.Timeout:
+                pulumi.log.warn(f"Timeout fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES})")
+                if attempt < README_FETCH_RETRIES - 1:
+                    time.sleep(RETRY_BACKOFF_BASE + attempt)
+            except requests.exceptions.RequestException as e:
+                pulumi.log.warn(f"Network error fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES}): {e}")
+                if attempt < README_FETCH_RETRIES - 1:
+                    time.sleep(RETRY_BACKOFF_BASE + attempt)
         return None
 
     def is_pr_mode(self) -> bool:
         return bool(self.branch_name and self.branch_name != self.default_branch_name)
 
     def _repository_file(
-        self, ressource_name_type: str, file: str, content: str
+        self, resource_name_type: str, file: str, content: str
     ) -> github.RepositoryFile:
         return github.RepositoryFile(
             f"{self.name}-{file}",
@@ -252,11 +283,10 @@ class GitRepositoryComponent(pulumi.ComponentResource):
             file=file,
             content=content,
             commit_message=f"""\
-chore(git-sync): auto-applied {ressource_name_type}
+chore(automation): sync {resource_name_type}
 
-this file was auto-applied from pulumi
-located here:
-    - https://github.com/{self.owner}/.github
+Automated synchronization from infrastructure repository.
+Source: https://github.com/{self.owner}/.github
 
 Signed-off-by: {self.author_fullname} <{self.author_email}>""",
             commit_author=self.author_fullname,
@@ -269,8 +299,8 @@ Signed-off-by: {self.author_fullname} <{self.author_email}>""",
 
     # ---------- sync: top-level files ----------
 
-    def sync_licence(self, licence_name: str):
-        license_dir = resources.files(PACKAGE_NAME).joinpath("license", licence_name)
+    def sync_license(self, license_name: str):
+        license_dir = resources.files(PACKAGE_NAME).joinpath("license", license_name)
         for license_file in license_dir.iterdir():
             with license_file.open() as file:
                 license_content = file.read()
@@ -555,7 +585,7 @@ build-backend = "hatchling.build"
         schedule: str | None,
         language: str,
         configs: list[str],
-        additionnal_configs: list[str],
+        additional_configs: list[str],
     ):
         # Main renovate file
         template = env.get_template(os.path.join("renovatebot", "renovate.json5.j2"))
@@ -566,7 +596,7 @@ build-backend = "hatchling.build"
                 schedule=schedule,
                 language=language,
                 configs=configs,
-                additionnal_configs=additionnal_configs,
+                additional_configs=additional_configs,
                 repository_name=f"{self.owner}/{self.name}",
             ),
         )
@@ -583,7 +613,7 @@ build-backend = "hatchling.build"
 
         # Optional per-tool configs by name
         cfg_root = resources.files(PACKAGE_NAME).joinpath("templates", "renovatebot", "config")
-        requested = set(configs) | set([x.replace(".json5", "") for x in additionnal_configs])
+        requested = set(configs) | set([x.replace(".json5", "") for x in additional_configs])
         for entry in cfg_root.iterdir():
             name = entry.name.replace(".json5.j2", "")
             if name in requested and name not in core_snippets:

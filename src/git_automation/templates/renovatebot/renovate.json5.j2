@@ -23,8 +23,8 @@
     {%- if "python" in configs %}
     "github>{{ repository_name | lower }}//.github/renovate/python.json5",
     {%- endif %}
-    {%- for additionnal_config in additionnal_configs %}
-    "github>{{ repository_name | lower }}//.github/renovate/{{ additionnal_config }}",
+    {%- for additional_config in additional_configs %}
+    "github>{{ repository_name | lower }}//.github/renovate/{{ additional_config }}",
     {%- endfor %}
   ],
   "dependencyDashboardTitle": "Renovate Dashboard 🤖",

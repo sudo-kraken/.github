@@ -5,6 +5,7 @@ Provides a component resource that manages GitHub repositories with
 automated file synchronization, workflow generation, and configuration
 management through Jinja2 templates.
 """
+
 import os
 import time
 from importlib import resources
@@ -204,7 +205,9 @@ class GitRepositoryComponent(pulumi.ComponentResource):
             if token:
                 headers["Authorization"] = f"Bearer {token}"
             response = requests.get(
-                f"https://api.github.com/users/{owner}", headers=headers, timeout=GITHUB_API_TIMEOUT
+                f"https://api.github.com/users/{owner}",
+                headers=headers,
+                timeout=GITHUB_API_TIMEOUT,
             )
             if response.status_code == 200:
                 data = response.json()
@@ -214,7 +217,9 @@ class GitRepositoryComponent(pulumi.ComponentResource):
             elif response.status_code == 401:
                 pulumi.log.warn("GitHub authentication failed - check GITHUB_TOKEN")
             else:
-                pulumi.log.warn(f"GitHub API returned status {response.status_code} for owner '{owner}'")
+                pulumi.log.warn(
+                    f"GitHub API returned status {response.status_code} for owner '{owner}'"
+                )
         except requests.exceptions.Timeout:
             pulumi.log.warn(f"Timeout while checking if '{owner}' is an organization")
         except requests.exceptions.RequestException as e:
@@ -237,35 +242,43 @@ class GitRepositoryComponent(pulumi.ComponentResource):
                 f"{section_contents}"
                 f"<!-- template:end:{template_name} -->"
             )
-            new_contents = (
-                f"{{% include 'readme/sections/{template_name}.md.j2' %}}"
-            )
+            new_contents = f"{{% include 'readme/sections/{template_name}.md.j2' %}}"
             readme_contents = readme_contents.replace(actual_contents, new_contents)
         return readme_contents
 
     def _safe_get_readme(self) -> str | None:
         """Fetch README.md with retry. Return None if not available."""
-        url = f"https://api.github.com/repos/{self.owner}/{self.name}/contents/README.md"
+        url = (
+            f"https://api.github.com/repos/{self.owner}/{self.name}/contents/README.md"
+        )
         headers = {"Accept": "application/vnd.github.raw+json"}
         token = os.environ.get("GITHUB_TOKEN")
         if token:
             headers["Authorization"] = f"Bearer {token}"
         for attempt in range(README_FETCH_RETRIES):
             try:
-                response = requests.get(url, headers=headers, timeout=GITHUB_API_TIMEOUT)
+                response = requests.get(
+                    url, headers=headers, timeout=GITHUB_API_TIMEOUT
+                )
                 if response.status_code == 200 and response.text is not None:
                     return response.text
                 if response.status_code in {403, 404}:
                     if attempt == README_FETCH_RETRIES - 1:
-                        pulumi.log.info(f"README.md not found for {self.owner}/{self.name} (will be created)")
+                        pulumi.log.info(
+                            f"README.md not found for {self.owner}/{self.name} (will be created)"
+                        )
                     elif attempt < README_FETCH_RETRIES - 1:
                         time.sleep(RETRY_BACKOFF_BASE + attempt)
             except requests.exceptions.Timeout:
-                pulumi.log.warn(f"Timeout fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES})")
+                pulumi.log.warn(
+                    f"Timeout fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES})"
+                )
                 if attempt < README_FETCH_RETRIES - 1:
                     time.sleep(RETRY_BACKOFF_BASE + attempt)
             except requests.exceptions.RequestException as e:
-                pulumi.log.warn(f"Network error fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES}): {e}")
+                pulumi.log.warn(
+                    f"Network error fetching README.md (attempt {attempt + 1}/{README_FETCH_RETRIES}): {e}"
+                )
                 if attempt < README_FETCH_RETRIES - 1:
                     time.sleep(RETRY_BACKOFF_BASE + attempt)
         return None
@@ -292,9 +305,7 @@ Signed-off-by: {self.author_fullname} <{self.author_email}>""",
             commit_author=self.author_fullname,
             commit_email=self.author_email,
             overwrite_on_create=True,
-            opts=pulumi.ResourceOptions(
-                depends_on=self._file_depends_on, parent=self
-            ),
+            opts=pulumi.ResourceOptions(depends_on=self._file_depends_on, parent=self),
         )
 
     # ---------- sync: top-level files ----------
@@ -341,11 +352,17 @@ Signed-off-by: {self.author_fullname} <{self.author_email}>""",
     def sync_code_of_conduct(self, contact_email: str):
         template = env.get_template(os.path.join("misc", "CODE_OF_CONDUCT.md.j2"))
         self._repository_file(
-            "CODE_OF_CONDUCT.md", "CODE_OF_CONDUCT.md", template.render(contact_email=contact_email)
+            "CODE_OF_CONDUCT.md",
+            "CODE_OF_CONDUCT.md",
+            template.render(contact_email=contact_email),
         )
 
     def sync_contributing(self):
-        with resources.files(PACKAGE_NAME).joinpath("misc", "CONTRIBUTING.md").open() as f:
+        with (
+            resources.files(PACKAGE_NAME)
+            .joinpath("misc", "CONTRIBUTING.md")
+            .open() as f
+        ):
             self._repository_file("CONTRIBUTING.md", "CONTRIBUTING.md", f.read())
 
     def sync_editor_config(self, language: str):
@@ -361,13 +378,17 @@ Signed-off-by: {self.author_fullname} <{self.author_email}>""",
         )
 
     def sync_gitattributes(self):
-        with resources.files(PACKAGE_NAME).joinpath("misc", "gitattributes").open() as f:
+        with (
+            resources.files(PACKAGE_NAME).joinpath("misc", "gitattributes").open() as f
+        ):
             self._repository_file(".gitattributes", ".gitattributes", f.read())
 
     def sync_codeowner(self, owner: str | None = None):
         template = env.get_template(os.path.join("misc", "CODEOWNERS.j2"))
         self._repository_file(
-            ".github/CODEOWNERS", ".github/CODEOWNERS", template.render(owner=owner or self.owner)
+            ".github/CODEOWNERS",
+            ".github/CODEOWNERS",
+            template.render(owner=owner or self.owner),
         )
 
     def sync_label(self, language: str, docker: bool, renovatebot: bool):
@@ -390,13 +411,18 @@ Signed-off-by: {self.author_fullname} <{self.author_email}>""",
 
     def sync_logo(self, logo: str):
         with resources.files(PACKAGE_NAME).joinpath("logo", logo).open() as f:
-            self._repository_file("docs/assets/logo.svg", "docs/assets/logo.svg", f.read())
+            self._repository_file(
+                "docs/assets/logo.svg", "docs/assets/logo.svg", f.read()
+            )
 
     def sync_git_cliff(self):
         """Copy git-cliff configuration to .github/cliff.toml."""
-        with resources.files(PACKAGE_NAME).joinpath("git-cliff", "cliff.toml").open() as f:
+        with (
+            resources.files(PACKAGE_NAME)
+            .joinpath("git-cliff", "cliff.toml")
+            .open() as f
+        ):
             self._repository_file(".github/cliff.toml", ".github/cliff.toml", f.read())
-
 
     def sync_pyproject(self, package_name: str | None, description: str):
         # Try to render from template; fallback to a minimal pyproject
@@ -426,7 +452,11 @@ build-backend = "hatchling.build"
 
     def sync_vscode_config(self, language: str):
         template = env.get_template(os.path.join("vscode", "launch.json.j2"))
-        self._repository_file(".vscode/launch.json", ".vscode/launch.json", template.render(language=language))
+        self._repository_file(
+            ".vscode/launch.json",
+            ".vscode/launch.json",
+            template.render(language=language),
+        )
 
     # ---------- README and workflows ----------
 
@@ -503,80 +533,200 @@ build-backend = "hatchling.build"
         docker_platforms: list[dict[str, str]] | None,
     ):
         # Always present
-        template = env.get_template(os.path.join("workflow", "validate-pr-title.yml.j2"))
-        self._repository_file(".github/workflows/validate-pr-title.yml", ".github/workflows/validate-pr-title.yml", template.render())
+        template = env.get_template(
+            os.path.join("workflow", "validate-pr-title.yml.j2")
+        )
+        self._repository_file(
+            ".github/workflows/validate-pr-title.yml",
+            ".github/workflows/validate-pr-title.yml",
+            template.render(),
+        )
 
         template = env.get_template(os.path.join("workflow", "stale.yml.j2"))
-        self._repository_file(".github/workflows/stale.yml", ".github/workflows/stale.yml", template.render())
+        self._repository_file(
+            ".github/workflows/stale.yml",
+            ".github/workflows/stale.yml",
+            template.render(),
+        )
 
         template = env.get_template(os.path.join("workflow", "scorecard.yml.j2"))
-        self._repository_file(".github/workflows/scorecard.yml", ".github/workflows/scorecard.yml", template.render())
+        self._repository_file(
+            ".github/workflows/scorecard.yml",
+            ".github/workflows/scorecard.yml",
+            template.render(),
+        )
 
         if documentation and language == "python":
-            template = env.get_template(os.path.join("workflow", "python", "documentation.yml.j2"))
-            self._repository_file(".github/workflows/documentation.yml", ".github/workflows/documentation.yml", template.render(default_branch_name=self.default_branch_name, branch_name=self.branch_name))
+            template = env.get_template(
+                os.path.join("workflow", "python", "documentation.yml.j2")
+            )
+            self._repository_file(
+                ".github/workflows/documentation.yml",
+                ".github/workflows/documentation.yml",
+                template.render(
+                    default_branch_name=self.default_branch_name,
+                    branch_name=self.branch_name,
+                ),
+            )
 
         if changelog:
-            template = env.get_template(os.path.join("workflow", "changelog", "main.yml.j2"))
-            self._repository_file(".github/workflows/changelog.yml", ".github/workflows/changelog.yml", template.render())
+            template = env.get_template(
+                os.path.join("workflow", "changelog", "main.yml.j2")
+            )
+            self._repository_file(
+                ".github/workflows/changelog.yml",
+                ".github/workflows/changelog.yml",
+                template.render(),
+            )
 
         if lint or test or binary or docker:
             template = env.get_template(os.path.join("workflow", "ci.yml.j2"))
-            self._repository_file(".github/workflows/ci.yml", ".github/workflows/ci.yml", template.render(
-                language=language,
-                package=package,
-                binary=binary,
-                binary_platforms=binary_platforms,
-                documentation=documentation,
-                changelog=changelog,
-                docker=docker,
-                docker_platforms=docker_platforms,
-            ))
+            self._repository_file(
+                ".github/workflows/ci.yml",
+                ".github/workflows/ci.yml",
+                template.render(
+                    language=language,
+                    package=package,
+                    binary=binary,
+                    binary_platforms=binary_platforms,
+                    documentation=documentation,
+                    changelog=changelog,
+                    docker=docker,
+                    docker_platforms=docker_platforms,
+                ),
+            )
 
         if docker and docker_platforms:
-            template = env.get_template(os.path.join("workflow", "docker", "build.yml.j2"))
-            self._repository_file(".github/workflows/docker-build.yml", ".github/workflows/docker-build.yml", template.render(default_branch_name=self.default_branch_name, branch_name=self.branch_name, platforms=docker_platforms))
-            template = env.get_template(os.path.join("workflow", "docker", "package.yml.j2"))
-            self._repository_file(".github/workflows/docker-package.yml", ".github/workflows/docker-package.yml", template.render(default_branch_name=self.default_branch_name, branch_name=self.branch_name, platforms=docker_platforms, tag_prefix="v" if language == "go" else ""))
+            template = env.get_template(
+                os.path.join("workflow", "docker", "build.yml.j2")
+            )
+            self._repository_file(
+                ".github/workflows/docker-build.yml",
+                ".github/workflows/docker-build.yml",
+                template.render(
+                    default_branch_name=self.default_branch_name,
+                    branch_name=self.branch_name,
+                    platforms=docker_platforms,
+                ),
+            )
+            template = env.get_template(
+                os.path.join("workflow", "docker", "package.yml.j2")
+            )
+            self._repository_file(
+                ".github/workflows/docker-package.yml",
+                ".github/workflows/docker-package.yml",
+                template.render(
+                    default_branch_name=self.default_branch_name,
+                    branch_name=self.branch_name,
+                    platforms=docker_platforms,
+                    tag_prefix="v" if language == "go" else "",
+                ),
+            )
 
         if language == "python":
             if lint:
-                template = env.get_template(os.path.join("workflow", "python", "lint.yml.j2"))
-                self._repository_file(".github/workflows/python-lint.yml", ".github/workflows/python-lint.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "python", "lint.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/python-lint.yml",
+                    ".github/workflows/python-lint.yml",
+                    template.render(),
+                )
             if test:
-                template = env.get_template(os.path.join("workflow", "python", "test.yml.j2"))
-                self._repository_file(".github/workflows/python-test.yml", ".github/workflows/python-test.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "python", "test.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/python-test.yml",
+                    ".github/workflows/python-test.yml",
+                    template.render(),
+                )
             if package:
-                template = env.get_template(os.path.join("workflow", "python", "package.yml.j2"))
-                self._repository_file(".github/workflows/python-package.yml", ".github/workflows/python-package.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "python", "package.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/python-package.yml",
+                    ".github/workflows/python-package.yml",
+                    template.render(),
+                )
 
         if language == "go":
             if lint:
-                template = env.get_template(os.path.join("workflow", "go", "lint.yml.j2"))
-                self._repository_file(".github/workflows/go-lint.yml", ".github/workflows/go-lint.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "go", "lint.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/go-lint.yml",
+                    ".github/workflows/go-lint.yml",
+                    template.render(),
+                )
             if test:
-                template = env.get_template(os.path.join("workflow", "go", "test.yml.j2"))
-                self._repository_file(".github/workflows/go-test.yml", ".github/workflows/go-test.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "go", "test.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/go-test.yml",
+                    ".github/workflows/go-test.yml",
+                    template.render(),
+                )
             if binary:
-                template = env.get_template(os.path.join("workflow", "go", "build.yml.j2"))
-                self._repository_file(".github/workflows/go-build.yml", ".github/workflows/go-build.yml", template.render(platforms=binary_platforms))
+                template = env.get_template(
+                    os.path.join("workflow", "go", "build.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/go-build.yml",
+                    ".github/workflows/go-build.yml",
+                    template.render(platforms=binary_platforms),
+                )
             if package:
-                template = env.get_template(os.path.join("workflow", "go", "package.yml.j2"))
-                self._repository_file(".github/workflows/go-package.yml", ".github/workflows/go-package.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "go", "package.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/go-package.yml",
+                    ".github/workflows/go-package.yml",
+                    template.render(),
+                )
 
         if language == "rust":
             if lint:
-                template = env.get_template(os.path.join("workflow", "rust", "lint.yml.j2"))
-                self._repository_file(".github/workflows/rust-lint.yml", ".github/workflows/rust-lint.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "rust", "lint.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/rust-lint.yml",
+                    ".github/workflows/rust-lint.yml",
+                    template.render(),
+                )
             if test:
-                template = env.get_template(os.path.join("workflow", "rust", "test.yml.j2"))
-                self._repository_file(".github/workflows/rust-test.yml", ".github/workflows/rust-test.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "rust", "test.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/rust-test.yml",
+                    ".github/workflows/rust-test.yml",
+                    template.render(),
+                )
             if binary:
-                template = env.get_template(os.path.join("workflow", "rust", "build.yml.j2"))
-                self._repository_file(".github/workflows/rust-build.yml", ".github/workflows/rust-build.yml", template.render(platforms=binary_platforms))
+                template = env.get_template(
+                    os.path.join("workflow", "rust", "build.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/rust-build.yml",
+                    ".github/workflows/rust-build.yml",
+                    template.render(platforms=binary_platforms),
+                )
             if package:
-                template = env.get_template(os.path.join("workflow", "rust", "package.yml.j2"))
-                self._repository_file(".github/workflows/rust-package.yml", ".github/workflows/rust-package.yml", template.render())
+                template = env.get_template(
+                    os.path.join("workflow", "rust", "package.yml.j2")
+                )
+                self._repository_file(
+                    ".github/workflows/rust-package.yml",
+                    ".github/workflows/rust-package.yml",
+                    template.render(),
+                )
 
     # ---------- Renovate ----------
 
@@ -604,7 +754,9 @@ build-backend = "hatchling.build"
         # Core snippets (always)
         core_snippets = ["labels", "semanticCommits", "github-actions"]
         for snippet in core_snippets:
-            cfg_template = env.get_template(os.path.join("renovatebot", "config", f"{snippet}.json5.j2"))
+            cfg_template = env.get_template(
+                os.path.join("renovatebot", "config", f"{snippet}.json5.j2")
+            )
             self._repository_file(
                 f".github/renovate/{snippet}.json5",
                 f".github/renovate/{snippet}.json5",
@@ -612,12 +764,18 @@ build-backend = "hatchling.build"
             )
 
         # Optional per-tool configs by name
-        cfg_root = resources.files(PACKAGE_NAME).joinpath("templates", "renovatebot", "config")
-        requested = set(configs) | set([x.replace(".json5", "") for x in additional_configs])
+        cfg_root = resources.files(PACKAGE_NAME).joinpath(
+            "templates", "renovatebot", "config"
+        )
+        requested = set(configs) | set(
+            [x.replace(".json5", "") for x in additional_configs]
+        )
         for entry in cfg_root.iterdir():
             name = entry.name.replace(".json5.j2", "")
             if name in requested and name not in core_snippets:
-                cfg_template = env.get_template(os.path.join("renovatebot", "config", entry.name))
+                cfg_template = env.get_template(
+                    os.path.join("renovatebot", "config", entry.name)
+                )
                 self._repository_file(
                     f".github/renovate/{name}.json5",
                     f".github/renovate/{name}.json5",

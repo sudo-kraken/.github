@@ -4,6 +4,7 @@ Pulumi program for managing GitHub organization repositories and automation.
 This module orchestrates repository creation, configuration synchronization,
 and workflow generation using declarative Pulumi stack configurations.
 """
+
 import pulumi
 
 from git_automation.GitRepositoryComponent import GitRepositoryComponent
@@ -45,9 +46,15 @@ for repository_config in config.get_object("repositories", []):
     workflow = "workflow" in repository_config
     workflow_lint = (not workflow) or repository_config["workflow"].get("lint", True)
     workflow_test = (not workflow) or repository_config["workflow"].get("test", True)
-    workflow_package = (not workflow) or repository_config["workflow"].get("package", True)
-    workflow_changelog = (not workflow) or repository_config["workflow"].get("changelog", True)
-    workflow_documentation = repository_config.get("workflow", {}).get("documentation", False)
+    workflow_package = (not workflow) or repository_config["workflow"].get(
+        "package", True
+    )
+    workflow_changelog = (not workflow) or repository_config["workflow"].get(
+        "changelog", True
+    )
+    workflow_documentation = repository_config.get("workflow", {}).get(
+        "documentation", False
+    )
 
     repo_renovate = repository_config.get("renovatebot", {})
     renovate_enabled = bool(global_renovate or repo_renovate)
@@ -127,7 +134,11 @@ for repository_config in config.get_object("repositories", []):
             configs.append(language)
 
         repository.sync_renovatebot(
-            (global_renovate.get("schedule") if isinstance(global_renovate, dict) else None)
+            (
+                global_renovate.get("schedule")
+                if isinstance(global_renovate, dict)
+                else None
+            )
             or repo_renovate.get("schedule"),
             language,
             configs,
@@ -139,7 +150,9 @@ for repository_config in config.get_object("repositories", []):
 
     # Per-language scaffolding
     if language == "python":
-        repository.sync_pyproject(package_name or repository_config["name"], repository_config["description"])
+        repository.sync_pyproject(
+            package_name or repository_config["name"], repository_config["description"]
+        )
         repository.sync_git_cliff()  # used by changelog flow
 
     # README

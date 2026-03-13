@@ -28,7 +28,7 @@ classifiers = [
 "Bug Tracker" = "https://github.com/sudo-kraken/.github/issues"
 
 [project.optional-dependencies]
-dev = ["ruff~=0.14.0"]
+dev = ["ruff~=0.15.6"]
 
 [build-system]
 requires = ["hatchling"]

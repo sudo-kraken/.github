@@ -1,25 +1,23 @@
 encryptionsalt: v1:a8x1oPmTIa4=:v1:UOGGZAOU+ZyTVGVL:QqsrCT3rddIxp83JFzpmYDPEYWBsUQ==
 config:
-  default_branch_name: main
+  .github:default_branch_name: main
 
-  branch_name: automation-sync
+  .github:branch_name: automation-sync
+  .github:protect_repositories: true
+  .github:allow_empty_repositories: false
 
-  author:
+  .github:author:
     email: sudo-kraken@prxy.8shield.net
     fullname: Joe Harrison
 
-  contact_email: sudo-kraken@prxy.8shield.net
-  security_email: sudo-kraken@prxy.8shield.net
+  .github:contact_email: sudo-kraken@prxy.8shield.net
+  .github:security_email: sudo-kraken@prxy.8shield.net
 
-  funding:
+  .github:funding:
     github: sudo-kraken
     buy_me_a_coffee: jharrison94
 
-  app_installation_ids:
-    renovatebot: "45460629"
-    dco: "38972756"
-
-  repositories:
+  .github:repositories:
     - name: test-docker
       title: test-docker
       description: test docker
@@ -30,7 +28,8 @@ config:
         - pulumi
       readme: true
       language: python
-      versions: ["3.10", "3.11", "3.12", "3.13"]
+      versions: ["3.11", "3.12", "3.13"]
+      scaffold: true
       gitignore: true
       devcontainer: true
 
@@ -38,8 +37,10 @@ config:
       docker_platforms:
         - os: linux
           arch: amd64
+          runner: ubuntu-latest
         - os: linux
           arch: arm64
+          runner: ubuntu-24.04-arm
 
       package: false
       package_name: test-docker
@@ -49,7 +50,6 @@ config:
         lint: true
         test: true
         changelog: true
-        # documentation: true
 
       application: true
 
@@ -63,7 +63,8 @@ config:
         - pulumi
       readme: true
       language: python
-      versions: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+      versions: ["3.11", "3.12", "3.13"]
+      scaffold: true
       gitignore: true
       devcontainer: true
 
@@ -75,10 +76,9 @@ config:
         lint: true
         test: true
         changelog: true
-        # documentation: true
 
       application: true
 
-  renovatebot:
+  .github:renovatebot:
     configs: []
     additional_configs: []

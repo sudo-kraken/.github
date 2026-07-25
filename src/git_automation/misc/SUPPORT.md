@@ -1,4 +1,4 @@
-<!--- THIS FILE IS GENERATED! DO NOT EDIT! Maintained by CDKTF -->
+<!--- THIS FILE IS GENERATED! DO NOT EDIT! Maintained by Pulumi -->
 # 🙋‍♂️ Support
 
 This document explains where and how to get help with most of my projects.
@@ -30,4 +30,3 @@ Here are some tips:
   messages in them, please also provide those.
 * The more time you put into asking your question, the better I and others
   can help you.
-

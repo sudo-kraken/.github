@@ -10,7 +10,6 @@ dependencies = [
   "pulumi-github~=6.12.1",
   "requests~=2.34.2",
   "Jinja2~=3.1.6",
-  "PyYAML~=6.0.2",
 ]
 keywords = ["pulumi", "github"]
 classifiers = [
@@ -28,7 +27,12 @@ classifiers = [
 "Bug Tracker" = "https://github.com/sudo-kraken/.github/issues"
 
 [project.optional-dependencies]
-dev = ["ruff~=0.15.6"]
+dev = [
+  "PyYAML~=6.0.2",
+  "pytest~=8.4.0",
+  "pytest-cov~=7.0.0",
+  "ruff~=0.15.6",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -39,3 +43,11 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/git_automation"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

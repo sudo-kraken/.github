@@ -1,7 +1,7 @@
 <!-- template:begin:usage/binary -->
 {%- set tag_prefix %}{%- if language == "go" %}v{% endif -%}{%- endset %}
-{%- set basename %}{{ repository_name.split("/")[1] }}-${version}-${platform}{%- endset %}
 {%- set platform %}{%- if language == "go" %}linux-amd64{%- else %}x86_64-unknown-linux-gnu{% endif -%}{%- endset %}
+{%- set basename %}{{ repository_basename }}-${version}-${platform}{%- endset %}
 ####  Binary
 ```bash
 version="1.0.0"
@@ -32,7 +32,7 @@ cosign verify-blob-attestation \
   --new-bundle-format \
   --certificate-identity "https://github.com/{{ repository_name }}/.github/workflows/release.yml@refs/tags/{{ tag_prefix }}${version}" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  --bundle {{ basename }}.sbom.bundle
+  --bundle {{ basename }}.sbom.bundle \
   ./{{ basename }}.tar.gz
 
 # Scan SBOM attestation, SBOM attestation was saved from the previous step  (recommended but not required)

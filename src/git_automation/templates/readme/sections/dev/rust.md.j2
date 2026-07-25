@@ -4,8 +4,8 @@ Install [rustup](https://rustup.rs/).
 ### Run linter and formatter
 
 ```
-cargo fmt
-cargo clippy
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
 ```
 {% endif %}
 

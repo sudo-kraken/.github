@@ -1,13 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
-uv sync --all-extras
+uv sync --all-extras --locked
 
-if [[ -z "${PULUMI_BUCKET:-}" || -z "${PULUMI_S3_ENDPOINT:-}" ]]; then
-  echo "Error: PULUMI_BUCKET and PULUMI_S3_ENDPOINT must be set in your environment."
+if [[ -n "${PULUMI_BUCKET:-}" && -n "${PULUMI_S3_ENDPOINT:-}" ]]; then
+  pulumi login "s3://${PULUMI_BUCKET}?region=auto&endpoint=${PULUMI_S3_ENDPOINT}&s3ForcePathStyle=true"
+elif [[ -n "${PULUMI_BUCKET:-}" || -n "${PULUMI_S3_ENDPOINT:-}" ]]; then
+  echo "Error: set both PULUMI_BUCKET and PULUMI_S3_ENDPOINT, or neither."
   exit 1
+else
+  echo "No custom Pulumi backend configured; using the current Pulumi login."
 fi
 
-pulumi login "s3://${PULUMI_BUCKET}?region=auto&endpoint=${PULUMI_S3_ENDPOINT}&s3ForcePathStyle=true"
-
-pulumi stack select dev || pulumi stack init dev
+TASK_PULUMI_STACK="${PULUMI_STACK:-dev}"
+pulumi stack select "${TASK_PULUMI_STACK}" || pulumi stack init "${TASK_PULUMI_STACK}"

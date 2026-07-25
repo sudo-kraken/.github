@@ -6,3 +6,9 @@
 {%- if language == 'python' %}
   - Python {{ python_version | default('3.11') }} and uv for local development
 {%- endif %}
+{%- if language == 'go' %}
+  - Go for local development
+{%- endif %}
+{%- if language == 'rust' %}
+  - Rust and Cargo for local development
+{%- endif %}

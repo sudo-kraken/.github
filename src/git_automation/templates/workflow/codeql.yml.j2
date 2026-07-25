@@ -7,10 +7,10 @@ on:
     - cron: "0 7 * * *"
   push:
     branches:
-      - main
+      - "{{ default_branch_name }}"
   pull_request:
     branches:
-      - main
+      - "{{ default_branch_name }}"
 permissions: {}
 concurrency:
   group: codeql-{{ "${{" }} github.ref {{ "}}" }}
@@ -38,7 +38,7 @@ jobs:
             build-mode: autobuild
           {%- elif language == "rust" %}
           - language: rust
-            build-mode: autobuild
+            build-mode: none
           {% endif +%}
     steps:
       - name: Checkout code

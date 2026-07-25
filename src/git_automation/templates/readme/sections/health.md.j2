@@ -1,7 +1,8 @@
 ## Health
 
 {%- if health_endpoint is defined %}
-  - `GET {{ health_endpoint }}` returns `{ "ok": true }`
+- `GET {{ health_endpoint }}` returns `{ "ok": true }`
 {%- else %}
-  - `GET /health` returns `{ "ok": true }`
+No health endpoint is declared by the repository automation. Document the
+application's liveness and readiness checks here when they are available.
 {%- endif %}

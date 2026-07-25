@@ -8,29 +8,32 @@
 
 {% include "readme/sections/overview.md.j2" %}
 
-{% include "readme/sections/architecture.md.j2" %}
+{% if documentation_url %}
+  {% include "readme/sections/documentation.md.j2" %}
+{% endif %}
 
-{% include "readme/sections/features.md.j2" %}
+{% if application %}
+  {% include "readme/sections/architecture.md.j2" %}
+  {% include "readme/sections/features.md.j2" %}
+{% endif %}
 
 {% include "readme/sections/prerequisites.md.j2" %}
 
 {% include "readme/sections/quick_start.md.j2" %}
 
 {# Usage appears only if there's at least one concrete usage subsection #}
-{% set has_usage = (package or docker or binary or helm) %}
+{% set has_usage = ((package and language in ["python", "go"]) or (binary and package) or docker or helm) %}
 {% if has_usage %}
   {% include "readme/sections/usage.md.j2" %}
 {% endif %}
 
 {% include "readme/sections/configuration.md.j2" %}
 
-{# Health & Endpoints: always include for python or docker repositories #}
-{% if language == "python" or docker %}
+{% if application %}
   {% include "readme/sections/health.md.j2" %}
   {% include "readme/sections/endpoints.md.j2" %}
+  {% include "readme/sections/production_notes.md.j2" %}
 {% endif %}
-
-{% include "readme/sections/production_notes.md.j2" %}
 
 {% include "readme/sections/dev.md.j2" %}
 

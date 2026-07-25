@@ -15,13 +15,18 @@
 {%- include "workflow/docker/package.yml.j2" -%}
 {%- endif %}
 {%- endset -%}
-{%- set needs %}
-{%- if package %}
-{%- if language == "python" %}, publish-package{% endif -%}
-{% endif -%}
-{%- if documentation %}, documentation{% endif -%}
-{%- if docker %}, verify-docker{% endif -%}
-{%- endset %}
+{%- set publish_needs = ["create-draft-release"] %}
+{%- if package and language == "python" %}
+  {%- do publish_needs.append("publish-package") %}
+{%- elif package and language in ["go", "rust"] %}
+  {%- do publish_needs.append("publish-artifact") %}
+{%- endif %}
+{%- if documentation %}
+  {%- do publish_needs.append("documentation") %}
+{%- endif %}
+{%- if docker %}
+  {%- do publish_needs.append("verify-docker") %}
+{%- endif %}
 name: Release
 on:
   push:
@@ -43,9 +48,9 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
-    {%- if changelog %}
+{% if changelog %}
     needs: [changelog]
-    {% endif -%}
+{% endif %}
     steps:
       - name: Checkout code
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -53,17 +58,24 @@ jobs:
           persist-credentials: false
 
       - name: Create release as draft
-        run: gh release create {{ "${" }}GITHUB_REF_NAME{{ "}" }}  -t "Release {{ "${" }}GITHUB_REF_NAME{{ "}" }}" {%- if changelog %} -n "{{ "${" }}RELEASE_BODY{{ "}" }}"{% endif %} --draft
+        run: |
+          if gh release view {{ "${" }}GITHUB_REF_NAME{{ "}" }} >/dev/null 2>&1; then
+            echo "Release {{ "${" }}GITHUB_REF_NAME{{ "}" }} already exists."
+          else
+            gh release create {{ "${" }}GITHUB_REF_NAME{{ "}" }} -t "Release {{ "${" }}GITHUB_REF_NAME{{ "}" }}"{% if changelog %} --notes "{{ "${" }}RELEASE_BODY{{ "}" }}"{% endif %} --draft
+          fi
         env:
           GITHUB_TOKEN: {{ "${{" }} secrets.GITHUB_TOKEN {{ "}}" }}
+{% if changelog %}
           RELEASE_BODY: {{ "${{" }} needs.changelog.outputs.release_body {{ "}}" }}
+{% endif %}
 {{ included_content | indent(2) }}
   publish-release:
     name: Publish release
     runs-on: ubuntu-24.04
     permissions:
       contents: write
-    needs: [create-draft-release{{ needs }}]
+    needs: {{ publish_needs | tojson }}
 {%- raw %}
     steps:
       - name: Checkout code

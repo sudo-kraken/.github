@@ -1,12 +1,17 @@
 <!-- template:begin:table_of_content -->
 ## Table of Contents
 - [Overview](#overview)
+{% if documentation_url -%}
+- [Documentation](#documentation)
+{%- endif %}
+{% if application -%}
 - [Architecture at a glance](#architecture-at-a-glance)
 - [Features](#features)
+{%- endif %}
 - [Prerequisites](#prerequisites)
 - [Quick start](#quick-start)
 {# show Usage only if at least one usage subsection will render #}
-{% set has_usage = (package or docker or binary or helm) %}
+{% set has_usage = ((package and language in ["python", "go"]) or (binary and package) or docker or helm) %}
 {% if has_usage -%}
 - [Usage](#usage)
 {%- if language == "python" and package %}
@@ -15,23 +20,29 @@
 {%- if docker %}
   - [Docker](#docker)
 {%- endif %}
-{%- if binary and language == "go" %}
+{%- if package and language == "go" %}
   - [Go](#go)
+{%- endif %}
+{%- if binary and package %}
+  - [Binary](#binary)
 {%- endif %}
 {%- if helm %}
   - [Helm](#helm)
 {%- endif %}
 {% endif %}
 - [Configuration](#configuration)
-{# Always include Health & Endpoints in ToC for python or docker repos #}
-{% if language == "python" or docker -%}
+{% if application -%}
 - [Health](#health)
 - [Endpoints](#endpoints)
-{%- endif %}
 - [Production notes](#production-notes)
+{%- endif %}
 - [Development](#development)
+{%- if lint %}
   - [Run linter and formatter](#run-linter-and-formatter)
+{%- endif %}
+{%- if test %}
   - [Run test](#run-test)
+{%- endif %}
 - [Troubleshooting](#troubleshooting)
 - [Licence](#licence)
 - [Security](#security)

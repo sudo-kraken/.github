@@ -1,16 +1,26 @@
 ## Quick start
-Local development with uv
 
+{% if language == "python" -%}
+Install the project dependencies:
 ```bash
 uv sync --all-extras
-uv run flask --app app:app run --host 0.0.0.0 --port ${PORT:-6969}
 ```
-
-{% if docker %}
-Pull and run the image
-
+Run the project's documented Python entry point with `uv run`.
+{% elif language == "go" -%}
+Run the Go project locally:
 ```bash
-docker pull ghcr.io/{{ repository_name }}:latest
-docker run --rm -p 6969:6969 -e PORT=6969 ghcr.io/{{ repository_name }}:latest
+go run .
+```
+{% elif language == "rust" -%}
+Run the Rust project locally:
+```bash
+cargo run
+```
+{% endif %}
+{% if docker -%}
+Authenticate when the package is private, then pull the image:
+```bash
+docker login ghcr.io
+docker pull ghcr.io/{{ repository_name | lower }}:latest
 ```
 {% endif %}

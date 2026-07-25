@@ -43,7 +43,6 @@ env/
 .vscode
 
 # UV
-uv.lock
 .python-version
 
 # Logs

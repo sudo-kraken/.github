@@ -1,4 +1,5 @@
 ## Production notes
 
-  - Prefer using a WSGI server (Gunicorn/uvicorn) with multiple workers for production.
-  - Expose the `/health` endpoint to your load balancer or orchestrator for liveness checks.
+- Pin deployments to an immutable release or image digest.
+- Configure resource limits, restarts, timeouts, and logging for the target environment.
+- Connect liveness and readiness probes only to endpoints the application implements.

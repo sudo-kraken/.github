@@ -10,7 +10,7 @@ build-binary:
       include:
 {%- endraw %}
         {%- for platform in binary_platforms %}
-        - target: {{ platform["os"] }}
+        - target: {{ platform["target"] }}
           runner: {{ platform["runner"] }}
         {%- endfor %}
 {%- raw %}
@@ -30,8 +30,11 @@ build-binary:
         fi
 
     - name: Configure rust toolchain stable
-      run: rustup update stable && rustup default stable
+      run: |
+        rustup update stable
+        rustup default stable
+        rustup target add ${{ matrix.target }}
 
     - name: Build the binary
-      run: cargo build --release --locked --target=${{ matrix.job.target }}
+      run: cargo build --release --locked --target=${{ matrix.target }}
 {%- endraw %}

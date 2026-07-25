@@ -1,5 +1,13 @@
 ## Architecture at a glance
 
-  - {{ architecture_summary | default('Service-oriented design with a simple HTTP interface') }}
-  - App entrypoint: `{{ entrypoint | default('app:app') }}`
-  - Stateless HTTP endpoints and optional background workers
+- Primary implementation: {{ language | capitalize }}
+{% if package -%}
+- Package distribution is enabled.
+{%- endif %}
+{% if binary and package -%}
+- Release binaries are built for the configured target platforms.
+{%- endif %}
+{% if docker -%}
+- A container image is built for the configured target platforms.
+{%- endif %}
+- Runtime entry points and internal components are documented alongside the source code.

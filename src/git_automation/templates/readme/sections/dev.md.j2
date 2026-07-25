@@ -1,8 +1,6 @@
-{%- if documentation_url is not defined or not documentation_url -%}
 ## Development
 
 {% include "readme/sections/dev/{}.md.j2".format(language) %}
 {%- if "devcontainer" in dev|default([]) %}
 {% include "readme/sections/dev/devcontainer.md.j2" %}
-{%- endif %}
 {%- endif %}

@@ -29,14 +29,14 @@ _Automate organisation and repository configuration using Pulumi. Uses uv for Py
   - [Manual Pulumi operations](#manual-pulumi-operations)
 - [Troubleshooting](#troubleshooting)
 - [Limitations and manual steps](#limitations-and-manual-steps)
-- [Licence](#licence)
+- [License](#license)
 - [Security](#security)
 - [Contributing](#contributing)
 - [Support](#support)
 
 ## Overview
 
-This repository contains Pulumi constructs and helper code that codify GitHub organisation and repository settings. Stacks are managed with the Pulumi CLI and repositories will be permanently deleted when removed from configuration.
+This repository contains Pulumi constructs and helper code that codify GitHub organisation and repository settings. Stacks are managed with the Pulumi CLI, with deletion protection enabled by default.
 
 This repository also contains reusable README templates and generator code under `src/git_automation/templates`. Use the included templates to render repository README files. See `Pulumi.stack.yaml.example` for an example stack configuration showing repository options.
 
@@ -70,14 +70,19 @@ Create a fine-grained GitHub token with the following repository level permissio
 
 ## Safety
 
-> [!WARNING]
-> Repositories will be **permanently deleted** when removed from your Pulumi configuration and running `pulumi up`. Always ensure you have backups before removing repositories from your stack configuration. To enable safer archiving instead of deletion, modify `archive_on_destroy=True` in `GitRepositoryComponent.py`.
+> [!IMPORTANT]
+> Repository components and all managed child resources are protected from deletion by default. Removing a protected repository from configuration makes `pulumi up` fail instead of deleting it. If protection is deliberately disabled, child resources are left intact and the GitHub repository is archived rather than permanently deleted.
+
+Language project files such as `pyproject.toml` are only generated when a repository explicitly sets `scaffold: true`. When scaffolding or README generation is disabled for an existing repository, the current remote file is preserved unchanged instead of being deleted.
 
 ## Setup
 
 ```sh
 # Install Python dependencies via uv
-uv sync
+uv sync --all-extras --locked
+
+# Create a stack file and review every repository entry before continuing
+cp Pulumi.stack.yaml.example "Pulumi.${PULUMI_STACK:-dev}.yaml"
 
 # Install Pulumi CLI
 curl -fsSL https://get.pulumi.com | sh
@@ -125,13 +130,18 @@ pulumi import <resource-type> <name> <id>
 # e.g. pulumi import github:index/repository:Repository repo_name owner/repo
 ```
 
-### Delete a resource
+### Retire a repository
 
 ```sh
-# Remove repository from configuration in your stack file, then:
-pulumi up  # This will permanently delete the repository
+# Set protect: false on only the repository being retired, then apply that change
+pulumi preview
+pulumi up
 
-# WARNING: This is destructive and cannot be undone easily
+# If this is the final repository, also set .github:allow_empty_repositories: true.
+# Remove the repository from the stack file, review the preview, and apply.
+# The provider archives the GitHub repository instead of deleting it.
+pulumi preview
+pulumi up
 ```
 
 ### Manual Pulumi operations
@@ -171,6 +181,8 @@ In **Code security**:
 
 - Disable **Dependabot security updates**.
 
+- Enable **Private vulnerability reporting**.
+
 In **Settings → Actions**:
 
 - Set **Approval for running fork pull request workflows from contributors** to **Require approval for all external contributors**.
@@ -187,7 +199,7 @@ User level limitation:
 
 In **Settings → Installations**:
 
-- Add the required GitHub Apps to your repositories.
+- Install and authorize required GitHub Apps, such as Renovate or DCO, manually. App installation lifecycle is not managed by this Pulumi program.
 
 ## License
 
@@ -195,7 +207,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Security
 
-If you discover a security issue, please review and follow the guidance in [SECURITY.md](SECURITY.md), or open a private security-focused issue with minimal details and request a secure contact channel.
+If you discover a security issue, follow the private reporting guidance in [SECURITY.md](SECURITY.md). Do not disclose vulnerabilities in public issues, discussions, or pull requests.
 
 ## Contributing
 

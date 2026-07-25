@@ -28,7 +28,8 @@ build-binary:
         cache: false
 
     - name: Get Git commit timestamps
-      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_OUTPUT
+      run: echo "TIMESTAMP=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+      shell: bash
 
     - name: Generate filenames
       id: generate-filename

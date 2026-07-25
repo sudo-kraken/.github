@@ -2,18 +2,21 @@
 # This is an example only. Use it as a template for your own stacks.
 
 config:
-  branch_name: automation-sync
-  author:
+  github:owner: your-github-owner
+  .github:default_branch_name: main
+  .github:branch_name: automation-sync
+  # Prevent repository, branch, and managed-file deletion by default.
+  .github:protect_repositories: true
+  # Keep false unless deliberately retiring the last configured repository.
+  .github:allow_empty_repositories: false
+  .github:author:
     email: you@example.com
     fullname: Your Name
-  contact_email: you@example.com
-  security_email: security@example.com
-  app_installation_ids:
-    renovatebot: "12345678"
-    dco: "12345678"
+  .github:contact_email: you@example.com
+  .github:security_email: security@example.com
 
   # repositories: list of repository specs to create/render
-  repositories:
+  .github:repositories:
     - name: example-python-repo
       title: Example Python Repo
       description: A small example Python project created from templates
@@ -22,6 +25,7 @@ config:
       topics:
         - python
         - example
+      protect: true
       readme: true
       package: "example-python-repo"
       label: true
@@ -30,7 +34,8 @@ config:
           - python
         additional_configs: []
       language: python
-      versions: ["3.9", "3.10", "3.11"]
+      versions: ["3.11", "3.12", "3.13"]
+      scaffold: true
       gitignore: true
       devcontainer: true
       docker: false
@@ -82,20 +87,22 @@ config:
 #       - topic1
 #       - topic2
 #     readme: <bool>          # whether to generate README.md (true/false)
-#     package: <string|bool>  # package name for published package (string) or false to skip
+#     protect: <bool>         # override the stack's deletion protection for this repository
+#     package: <string|bool>  # package name, true to use repository name, or false to skip
+#     package_name: <string>  # optional package-name override when package is true
 #     label: <bool>           # generate repository labels (true/false)
 #     renovatebot:            # renovatebot configuration (empty lists allowed)
 #       configs:              # default renovate configurations to include
 #         - python
 #         - docker
 #       additional_configs: []
-#     language: <string>      # one of: python, go, rust, (or any string used by templates)
+#     language: <string>      # one of: python, go, rust when workflows are enabled
 #     versions: [..]          # list of versions used by CI templates (e.g. python versions)
+#     scaffold: <bool>        # continuously manage language project files such as pyproject.toml
 #     gitignore: <bool>       # generate .gitignore (true/false)
 #     devcontainer: <bool>    # include devcontainer files (true/false)
 #     docker: <bool>          # enable docker workflows (true/false)
-#     helm: <bool>            # enable helm chart badge/links (true/false)
-#     helm_chart_name: <str>  # name of chart used in helm badge/link
+#     helm_chart_name: <str>  # defining this enables the Helm badge and usage section
 #     application: <bool>     # opt-in to application-specific sections in README
 #     workflow:               # per-repo workflow toggles
 #       lint: <bool>          # include lint workflow
@@ -113,7 +120,6 @@ config:
 #         runner: ubuntu-latest
 #
 # Notes:
-# - Use boolean values (true/false) for flags. Templates use defaults when fields
-#   are omitted; we standardized templates to use `|default(...)` so missing
-#   keys won't break rendering.
+# - Use boolean values (true/false) for flags. The Pulumi program validates
+#   required fields and supplies documented defaults before strict rendering.
 # -----------------------------------------------------------------------------

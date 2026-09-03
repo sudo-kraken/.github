@@ -31,7 +31,7 @@ dev = [
   "PyYAML~=6.0.2",
   "pytest~=8.4.0",
   "pytest-cov~=7.0.0",
-  "ruff~=0.15.6",
+  "ruff~=0.16.6",
 ]
 
 [build-system]

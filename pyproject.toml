@@ -29,7 +29,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
   "PyYAML~=6.0.2",
-  "pytest~=8.4.0",
+  "pytest~=9.1.1",
   "pytest-cov~=7.0.0",
   "ruff~=0.15.6",
 ]

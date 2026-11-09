@@ -1,28 +1,10 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11, <4.0.0"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version == '3.13.*'",
     "python_full_version < '3.13'",
-]
-
-[[package]]
-name = "arpeggio"
-version = "2.0.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3b/58/ba011f3cf8291804ce80f9d81289ac15f0319a27f9d7e3c124aa5e4981cc/Arpeggio-2.0.3.tar.gz", hash = "sha256:9e85ad35cfc6c938676817c7ae9a1000a7c72a34c71db0c687136c460d12b85e", size = 766566, upload-time = "2025-09-12T12:45:20.594Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/4d/53b8186b41842f7a5e971b1d1c28e678364dcf841e4170f5d14d38ac1e2a/Arpeggio-2.0.3-py2.py3-none-any.whl", hash = "sha256:9374d9c531b62018b787635f37fd81c9a6ee69ef2d28c5db3cd18791b1f7db2f", size = 54656, upload-time = "2025-09-12T12:45:17.971Z" },
-]
-
-[[package]]
-name = "attrs"
-version = "25.4.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6b/5c/685e6633917e101e5dcb62b9dd76946cbb57c26e133bae9e0cd36033c0a9/attrs-25.4.0.tar.gz", hash = "sha256:16d5969b87f0859ef33a48b35d55ac1be6e42ae49d5e853b597db70c35c57e11", size = 934251, upload-time = "2025-10-06T13:54:44.725Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/2a/7cc015f5b9f5db42b7d48157e23356022889fc354a2813c15934b7cb5c0e/attrs-25.4.0-py3-none-any.whl", hash = "sha256:adcf7e2a1fb3b36ac48d97835bb6d8ade15b8dcce26aba8bf1d14847b57a3373", size = 67615, upload-time = "2025-10-06T13:54:43.17Z" },
 ]
 
 [[package]]
@@ -262,7 +244,7 @@ dev = [
 requires-dist = [
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "pulumi", specifier = "~=3.246.0" },
-    { name = "pulumi-github", specifier = "~=6.12.1" },
+    { name = "pulumi-github", specifier = "~=6.15.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "~=8.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "~=7.0.0" },
     { name = "pyyaml", marker = "extra == 'dev'", specifier = "~=6.0.2" },
@@ -559,19 +541,6 @@ wheels = [
 ]
 
 [[package]]
-name = "parver"
-version = "0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "arpeggio" },
-    { name = "attrs" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/e5/1c774688a90f0b76e872e30f6f1ba3f5e14056cd0d96a684047d4a986226/parver-0.5.tar.gz", hash = "sha256:b9fde1e6bb9ce9f07e08e9c4bea8d8825c5e78e18a0052d02e02bf9517eb4777", size = 26908, upload-time = "2023-10-03T21:06:54.506Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0f/4c/f98024021bef4d44dce3613feebd702c7ad8883f777ff8488384c59e9774/parver-0.5-py3-none-any.whl", hash = "sha256:2281b187276c8e8e3c15634f62287b2fb6fe0efe3010f739a6bd1e45fa2bf2b2", size = 15172, upload-time = "2023-10-03T21:06:52.796Z" },
-]
-
-[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -617,16 +586,16 @@ wheels = [
 
 [[package]]
 name = "pulumi-github"
-version = "6.12.2"
+version = "6.15.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "parver" },
+    { name = "packaging" },
     { name = "pulumi" },
     { name = "semver" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d0/f2/9e0e274be7ed11e08bfddb9f5c150badb863bcb94a826f3ad701e54a3662/pulumi_github-6.12.2.tar.gz", hash = "sha256:d8cc3a2d343ee49bb38dc8aa42b83fd9574fed862a871b982a7b7ebb723405c6", size = 256446, upload-time = "2026-04-10T16:32:17.301Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/74/ecf839d52ad13cfb231c936cff114173d921e4c4bb2e35a36b936202461e/pulumi_github-6.15.1.tar.gz", hash = "sha256:1f9650fa5880a17fb8b1f169f8a9fcebe514fe74b19277aabe07eb53ecdf25c2", size = 272284, upload-time = "2026-11-02T12:02:27.058Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/1a/030d5f81a178c090755c4734aa1b1ced23e1c11eabcf70211cef9de19585/pulumi_github-6.12.2-py3-none-any.whl", hash = "sha256:7e26942729447ae596b503a40c57830783950c09332ecd42038ed645916768c8", size = 457803, upload-time = "2026-04-10T16:32:15.398Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/60/277eb4e3c3ba4c4926055ace8b9e2daad3ec3b3076e4fdc273aa8075cb09/pulumi_github-6.15.1-py3-none-any.whl", hash = "sha256:af4a11b5bfd4cc44489d338ec4e7ff71cb5a7d6a85b8e63d9f833122c7a2b14c", size = 477263, upload-time = "2026-11-02T12:02:25.459Z" },
 ]
 
 [[package]]

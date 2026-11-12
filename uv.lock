@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11, <4.0.0"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -261,7 +261,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "jinja2", specifier = "~=3.1.6" },
-    { name = "pulumi", specifier = "~=3.246.0" },
+    { name = "pulumi", specifier = "~=3.276.0" },
     { name = "pulumi-github", specifier = "~=6.12.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "~=8.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "~=7.0.0" },
@@ -596,7 +596,7 @@ wheels = [
 
 [[package]]
 name = "pulumi"
-version = "3.246.0"
+version = "3.276.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "debugpy" },
@@ -610,9 +610,10 @@ dependencies = [
     { name = "protobuf" },
     { name = "pyyaml" },
     { name = "semver" },
+    { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/28/8a9ff0fd2ef66b7ee6737a4a4f6fbdde4f9dbfca314247c0e935b258603f/pulumi-3.246.0-py3-none-any.whl", hash = "sha256:60c40be7abf67e893d39182de3108d520341390b493fb3d8ccaa974cfade590a", size = 406869, upload-time = "2026-06-11T19:52:29.098Z" },
+    { url = "https://files.pythonhosted.org/packages/76/d5/7d49fcdd8baff37ad0dc7de4f77841919178ea18a9b6ce57f4e1571f6bd5/pulumi-3.276.0-py3-none-any.whl", hash = "sha256:9afd68f1d885b2e2012f260674520e9a407f403aaf030a4b1960289bdf5e8d09", size = 461558, upload-time = "2026-11-12T17:57:04.594Z" },
 ]
 
 [[package]]
